@@ -1,15 +1,15 @@
-Always respond in 한국어
+Always respond in Korean
 
-## directory structure
+## Directory Structure
 
 - src
 - src/app: Next.js App Routers
 - src/app/[folder]/action.ts: server action function for specific page
 - src/components/common: common components
-- src/components/[pageName]/components/\*: Components for specific page
-- src/components/[pageName]/constants/\*
-- src/components/[pageName]/hooks/\*
-- src/components/[pageName]/lib/\*
+- src/components/[pageName]/components/*: Components for specific page
+- src/components/[pageName]/constants/*
+- src/components/[pageName]/hooks/*
+- src/components/[pageName]/lib/*
 - src/hooks: Common hooks
 - src/lib: utility functions
 - src/types: TypeScript types
@@ -18,10 +18,10 @@ Always respond in 한국어
 
 ## Next.js: Must use Server Action
 
-- All about API is Server Action
-- All about Client Component is use `useAction` or `useInfiniteAction` hooks
-  - `useAction` is a hook that is used to call the server action
-  - hooks in src/hooks/useAction.ts
+- All API interactions must use Server Actions
+- All Client Components must use `useAction` or `useInfiniteAction` hooks
+  - `useAction` is for calling server actions
+  - Hooks are defined in src/hooks/useAction.ts
 
 ## API Patterns
 
@@ -60,13 +60,11 @@ export type paths = {
 ### 4. Best Practices
 
 1. API Type Definition:
-
    - Use `paths` type for API endpoints
    - Define all possible responses
    - Include error response types
 
 2. Server Action:
-
    - Handle all possible errors
    - Return consistent type structure
    - Use proper TypeScript types
@@ -84,42 +82,43 @@ export type paths = {
 - Use `type` for utility types
 - Use `type` for custom types
 
-## 클린 코드 가이드라인
+## Clean Code Guidelines
 
-### 1. 가독성 (Readability)
+### 1. Readability
 
-- 맥락 줄이기 (Reduce Context)
-  - 같이 실행되지 않는 코드는 분리
-  - 구현 상세는 추상화
-  - 로직 종류별로 함수 분리
-- 명확한 이름 사용 (Use Meaningful Names)
-  - 복잡한 조건에 의미있는 이름 부여
-  - 매직 넘버 대신 상수 사용
-- 위에서 아래로 자연스러운 흐름 (Natural Flow)
-  - 불필요한 시점 이동 최소화
-  - 간단한 삼항 연산자 사용
+- Reduce Context
+  - Separate unrelated code
+  - Abstract implementation details
+  - Separate functions by logic type
+- Use Meaningful Names
+  - Give meaningful names to complex conditions
+  - Use constants instead of magic numbers
+- Natural Flow from top to bottom
+  - Minimize unnecessary timing shifts
+  - Use simple ternary operators
 
-### 2. 예측 가능성 (Predictability)
+### 2. Predictability
 
-- 함수/변수 이름 중복 피하기 (Avoid Duplicate Names)
-- 동일 종류 함수는 일관된 반환 타입 사용 (Consistent Return Types)
-- 숨은 로직을 명시적으로 표현 (Explicitly Express Hidden Logic)
+- Avoid Duplicate Names
+- Use Consistent Return Types for similar functions
+- Explicitly Express Hidden Logic
 
-### 3. 응집도 (Cohesion)
+### 3. Cohesion
 
-- 연관된 파일은 같은 디렉토리에 배치 (Group Related Files)
-- 매직 넘버 제거 (Remove Magic Numbers)
-- 폼 관련 로직은 응집도 높게 관리 (Manage Form Logic)
+- Group Related Files in same directory
+- Remove Magic Numbers
+- Manage Form Logic with high cohesion
 
-### 4. 결합도 (Coupling)
+### 4. Coupling
 
-- 단일 책임 원칙 준수 (Single Responsibility Principle)
-- 필요한 경우 코드 중복 허용 (Allow Code Duplication)
-- Props Drilling 최소화 (Minimize Props Drilling)
+- Follow Single Responsibility Principle
+- Allow Code Duplication when necessary
+- Minimize Props Drilling
 
-## 우선순위 결정
+## Priority Decision
 
-- 응집도와 가독성이 상충할 경우:
-  - 오류 위험이 높은 경우 응집도 우선
-  - 위험이 낮은 경우 가독성 우선
-- 코드 품질 기준을 상황에 맞게 적절히 조율
+- When Cohesion and Readability conflict:
+  - Prioritize cohesion when error risk is high
+  - Prioritize readability when risk is low
+- Adjust code quality standards according to the situation
+

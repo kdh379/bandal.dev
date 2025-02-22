@@ -2,10 +2,7 @@
 description: git commit 또는 PR 메시지 작성 가이드
 globs: 
 ---
-
 # Git convention
-
-always 
 
 ## Git Commit Message Rules
 
@@ -27,7 +24,7 @@ always
 
 **Subject:**
 
-- always use 한국어
+- Always respond in Korean
 - describe the changes in past tense
 - max 50 characters
 - imperative mood

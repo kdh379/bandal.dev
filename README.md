@@ -8,3 +8,10 @@
 - TailwindCSS 4
 - ESLint 9
 - Prettier 3
+
+## 추가 의존성성
+
+- Husky 8
+- Prettier 3
+- TailwindCSS 4
+- ESLint 9

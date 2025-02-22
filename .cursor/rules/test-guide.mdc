@@ -2,106 +2,108 @@
 description: 테스트 작성 가이드
 globs: 
 ---
-# Playwright 테스트 작성 가이드
-## 1. 프로젝트 구조
+# Playwright Test Writing Guide
+
+## 1. Project Structure
 ```
 tests/
-├── e2e/                 # E2E 테스트
-├── integration/         # 통합 테스트
-├── fixtures/            # 테스트 데이터
+├── e2e/                 # E2E tests
+├── integration/         # Integration tests
+├── fixtures/           # Test data
 ```
 
-## 2. 테스트 파일 작성 규칙
-### 파일 명명 규칙
-- 테스트 파일은 .spec.ts 확장자 사용
-- 파일명은 하이픈(-)으로 구분하고 테스트 대상을 명확히 표현
+## 2. Test File Writing Rules
+### File Naming Convention
+- Test files should use .spec.ts extension
+- File names should be hyphen-separated and clearly express the test target
+
 ```
 login.spec.ts
 create-post.spec.ts
 user-profile.spec.ts
 ```
 
-### 기본 테스트 구조
+### Basic Test Structure
 ```ts
 import { test, expect } from '@playwright/test';
 import { TEST_USERS } from '../fixtures/users';
 
-test.describe('인증 및 로그인 테스트', () => {
+test.describe('Authentication and Login Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
   });
 
-  test('유효한 자격증명으로 로그인 시 대시보드로 이동', async ({ page }) => {
-    // 테스트 로직
+  test('Should navigate to dashboard with valid credentials', async ({ page }) => {
+    // Test logic
   });
 });
 ```
 
-## 3. 테스트 케이스 작성 규칙
-### 테스트 설명
+## 3. Test Case Writing Rules
+### Test Description
 ```ts
-// ❌ 잘못된 예
+// ❌ Bad example
 test('login test', async ({ page }) => {});
 
-// ✅ 좋은 예
-test('유효한 이메일과 비밀번호로 로그인 시 대시보드로 이동해야 함', async ({ page }) => {});
+// ✅ Good example
+test('should redirect to dashboard when logging in with valid email and password', async ({ page }) => {});
 ```
 
-### 테스트 단계 구분
+### Test Step Separation
 ```ts
-test('상품 구매 프로세스', async ({ page }) => {
-  await test.step('상품 페이지 진입', async () => {
+test('Product purchase process', async ({ page }) => {
+  await test.step('Navigate to product page', async () => {
     await page.goto('/products/1');
     await expect(page).toHaveURL('/products/1');
   });
 
-  await test.step('장바구니에 추가', async () => {
-    await page.getByRole('button', { name: '장바구니 추가' }).click();
-    await expect(page.getByRole('alert')).toHaveText('장바구니에 추가되었습니다');
+  await test.step('Add to cart', async () => {
+    await page.getByRole('button', { name: 'Add to Cart' }).click();
+    await expect(page.getByRole('alert')).toHaveText('Added to cart');
   });
 });
 ```
 
-## 4. Locator 전략
-### 우선순위
+## 4. Locator Strategy
+### Priority
 ```ts
-// 1. Role과 접근성 속성 (최우선)
-page.getByLabel('이메일')
-page.getByRole('button', { name: '로그인' })
-page.getByRole('textbox', { name: '비밀번호' })
-page.getByRole('heading', { name: '회원가입' })
+// 1. Role and accessibility attributes (Highest priority)
+page.getByLabel('Email')
+page.getByRole('button', { name: 'Login' })
+page.getByRole('textbox', { name: 'Password' })
+page.getByRole('heading', { name: 'Sign Up' })
 
-// 2. 텍스트 및 기타
-page.getByText('계정 만들기')
-page.getByPlaceholder('이메일을 입력하세요')
+// 2. Text and others
+page.getByText('Create Account')
+page.getByPlaceholder('Enter your email')
 
-// 3. 테스트 ID (Role과 접근성 속성으로 선택이 어려운 경우에 사용)
-// ⚠️ 사용 전 반드시 해당 요소에 data-testid 속성이 정의되어 있는지 확인
+// 3. Test ID (Use when selection by role and accessibility attributes is difficult)
+// ⚠️ Verify that the element has data-testid attribute defined before using
 page.getByTestId('submit-button')
 
-// 안티 패턴
-// ❌ 피해야 할 방식
+// Anti-patterns
+// ❌ Approaches to avoid
 page.locator('.login-btn')
 page.locator('div > button')
 ```
 
-## 5. 검증(Assertions) 가이드
+## 5. Assertions Guide
 ```ts
-// 요소 상태 검증
+// Element state assertions
 await expect(page.getByRole('button')).toBeEnabled();
 await expect(page.getByRole('alert')).toBeVisible();
 
-// 텍스트 검증
-await expect(page.getByRole('heading')).toHaveText('환영합니다');
+// Text assertions
+await expect(page.getByRole('heading')).toHaveText('Welcome');
 
-// URL 검증
+// URL assertions
 await expect(page).toHaveURL(/.*dashboard/);
 
-// 다중 요소 검증
+// Multiple elements assertions
 await expect(page.getByRole('listitem')).toHaveCount(3);
 ```
 
-## 6. 테스트 데이터 관리
+## 6. Test Data Management
 ```ts
 // tests/fixtures/users.ts
 export const TEST_USERS = {
@@ -116,53 +118,53 @@ export const TEST_USERS = {
 };
 ```
 
-## 7. 모킹 전략
-다음과 같은 경우에만 API 모킹을 사용합니다:
-- 외부 API 의존성이 있는 경우
-- 테스트 환경에서 실제 API가 사용 불가능한 경우
-- 특정 에러 상황 테스트가 필요한 경우
-- 모킹 파일 위치: src/mocks/apis/[schema].ts
+## 7. Mocking Strategy
+Use API mocking only in the following cases:
+- When there are external API dependencies
+- When real API is not available in test environment
+- When testing specific error scenarios
+- Mocking file location: src/mocks/apis/[schema].ts
 ```ts
-// 차량 조회 API 에러 발생 시 에러 메시지 표시
-test('차량 조회 API 에러 발생 시 에러 메시지 표시', async ({ page }) => {
+// Display error message when vehicle lookup API fails
+test('Should display error message when vehicle lookup API fails', async ({ page }) => {
   await page.route('**/car', route => {
     route.fulfill({
       status: 503,
       contentType: 'application/json',
       body: JSON.stringify({
         code: 'E062',
-        message: '통신에 문제가 있어 정보를 불러오지 못했습니다.\n잠시 후 다시 시도해 주세요.'
+        message: 'Unable to load information due to communication issues.\nPlease try again later.'
       })
     });
   });
 
   await page.goto('/cars');
-  await expect(page.getByRole('alert')).toHaveText('통신에 문제가 있어 정보를 불러오지 못했습니다.\n잠시 후 다시 시도해 주세요.');
+  await expect(page.getByRole('alert')).toHaveText('Unable to load information due to communication issues.\nPlease try again later.');
 });
 
-// 비즈니스 에러 테스트 예시 추가
-test('등록된 상품이 있는 차량 삭제 시 에러 메시지 표시', async ({ page }) => {
+// Business error test example
+test('Should display error message when deleting vehicle with registered products', async ({ page }) => {
   await page.route('**/car/1', route => {
     route.fulfill({
       status: 400,
       contentType: 'application/json',
       body: JSON.stringify({
         code: 'C002',
-        message: '해당 차량으로 등록된 상품이 있습니다.',
+        message: 'There are products registered with this vehicle.',
         result: {
-          serviceName: '테스트 서비스',
-          productName: '테스트 상품'
+          serviceName: 'Test Service',
+          productName: 'Test Product'
         }
       })
     });
   });
 
-  await page.getByRole('button', { name: '삭제' }).click();
-  await expect(page.getByRole('alert')).toHaveText('해당 차량으로 등록된 상품이 있습니다.');
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await expect(page.getByRole('alert')).toHaveText('There are products registered with this vehicle.');
 });
 
-// 성공 응답 테스트 예시 추가
-test('차량 목록 조회 성공', async ({ page }) => {
+// Success response test example
+test('Successfully fetch vehicle list', async ({ page }) => {
   await page.route('**/car', route => {
     route.fulfill({
       status: 200,
@@ -177,13 +179,13 @@ test('차량 목록 조회 성공', async ({ page }) => {
           list: [{
             id: 1,
             businessLicenseId: 3,
-            businessLicenseName: '테스트 사업자',
-            carNumber: '44가4444',
+            businessLicenseName: 'Test Business',
+            carNumber: '44ga4444',
             carTypeFuelCode: 1,
             carTypeFuelName: 'LPG',
             carTypeGradeCode: 1,
-            carTypeGradeName: '소형',
-            carTypeName: '제네시스 쿠페 380 GT P',
+            carTypeGradeName: 'Compact',
+            carTypeName: 'Genesis Coupe 380 GT P',
             modelYear: 2024
           }]
         }
@@ -192,20 +194,20 @@ test('차량 목록 조회 성공', async ({ page }) => {
   });
 
   await page.goto('/cars');
-  await expect(page.getByRole('row')).toHaveCount(2); // 헤더 row + 데이터 row
+  await expect(page.getByRole('row')).toHaveCount(2); // Header row + data row
 });
 ```
 
-## 8. 인증 상태 관리 (storageState)
-### 인증이 필요한 테스트에서 사용
+## 8. Authentication State Management (storageState)
+### Use in tests requiring authentication
 ```typescript
 // tests/e2e/protected-route.spec.ts
 import { test } from '@playwright/test';
 
 test.use({ storageState: './tests/fixtures/auth.json' });
 
-test('인증이 필요한 페이지 접근', async ({ page }) => {
+test('Access protected page', async ({ page }) => {
   await page.goto('/dashboard');
-  // ... 테스트 로직
+  // ... test logic
 });
 ```
