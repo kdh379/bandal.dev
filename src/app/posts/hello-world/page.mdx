@@ -1,0 +1,111 @@
+# 첫 번째 블로그 포스트
+
+_작성일: 2023년 12월 10일_
+
+안녕하세요! 이것은 제 블로그의 첫 번째 글입니다. 이 글에서는 Next.js와 MDX를 사용하여 블로그를 만드는 과정을 공유하려고 합니다.
+
+## Next.js와 MDX로 블로그 만들기
+
+Next.js는 React 기반의 프레임워크로, 서버 사이드 렌더링, 정적 사이트 생성, API 라우트 등 다양한 기능을 제공합니다. MDX는 Markdown에 JSX를 추가한 확장 마크다운 형식으로, React 컴포넌트를 마크다운 문서 내에서 사용할 수 있게 해줍니다.
+
+### 설치 및 설정
+
+먼저 Next.js 프로젝트를 설정하고 MDX를 추가하는 방법을 알아보겠습니다:
+
+```bash
+# Next.js 프로젝트 생성
+npx create-next-app my-blog
+cd my-blog
+
+# MDX 지원을 위한 패키지 설치
+npm install @next/mdx @mdx-js/loader @mdx-js/react
+```
+
+그 다음, Next.js 설정 파일(next.config.js)에 MDX를 추가합니다:
+
+```javascript
+const withMDX = require("@next/mdx")({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [],
+    rehypePlugins: [],
+  },
+});
+
+module.exports = withMDX({
+  pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
+});
+```
+
+### 스타일링
+
+블로그의 외관은 사용자 경험에 큰 영향을 미칩니다. 아래는 Tailwind CSS를 사용한 예시입니다:
+
+```tsx
+// 코드 스니펫 예시
+export function BlogLayout({ children }) {
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="prose prose-lg prose-blue">{children}</main>
+    </div>
+  );
+}
+```
+
+## 마크다운 기능 테스트
+
+다양한 마크다운 요소들이 어떻게 보이는지 확인해보겠습니다.
+
+### 텍스트 강조
+
+**굵은 텍스트**와 *기울임꼴 텍스트*를 사용할 수 있습니다.
+
+### 목록
+
+순서가 있는 목록:
+
+1. 첫 번째 항목
+2. 두 번째 항목
+3. 세 번째 항목
+
+순서가 없는 목록:
+
+- 사과
+- 바나나
+- 오렌지
+
+### 인용구
+
+> 성공은 실패의 꼬리를 물고 온다.
+>
+> — 빈센트 반 고흐
+
+### 코드 블록
+
+인라인 코드: `const message = "Hello, world!";`
+
+```tsx
+// React 컴포넌트 예시
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>현재 카운트: {count}</p>
+      <button onClick={() => setCount(count + 1)}>증가</button>
+    </div>
+  );
+}
+```
+
+## 결론
+
+Next.js와 MDX는 개발자 블로그를 만드는 데 매우 강력한 조합입니다. 이 조합은 마크다운의 간결함과 React의 유연성을 모두 제공합니다.
+
+앞으로 더 많은 글들을 이 블로그에 게시할 예정이니 계속 방문해주세요!
+
+---
+
+_이 글이 도움이 되셨나요? 질문이나 의견이 있으시면 아래에 댓글을 남겨주세요._

@@ -1,0 +1,168 @@
+export const meta = {
+  title: "Next.js의 Server Actions 활용하기",
+  description:
+    "Next.js의 Server Actions를 사용하여 서버-클라이언트 간 데이터 처리를 효율적으로 구현하는 방법을 알아봅니다.",
+  date: "2024-04-15",
+};
+
+Next.js의 Server Actions는 React의 'use server' 지시문을 활용하여 서버에서 실행되는 비동기 함수를 만들 수 있게 해주는 기능입니다. 이를 통해 클라이언트 컴포넌트에서 직접 서버 함수를 호출할 수 있어, API 엔드포인트를 별도로 만들 필요 없이 데이터를 조작할 수 있습니다.
+
+## Server Actions란?
+
+Server Actions는 Next.js 14에서 정식 출시된 기능으로, 폼 제출이나 데이터 변경과 같은 작업을 서버에서 직접 처리할 수 있게 해줍니다. 이는 클라이언트-서버 통신을 단순화하고, 보안을 강화하며, 성능을 향상시킵니다.
+
+## 기본 사용법
+
+Server Actions를 사용하는 가장 간단한 방법은 함수 상단에 'use server' 지시문을 추가하는 것입니다:
+
+```tsx
+// app/actions.ts
+"use server";
+
+export async function addTodo(formData: FormData) {
+  const title = formData.get("title") as string;
+  // 데이터베이스에 할 일 추가
+  await db.todo.create({ data: { title } });
+}
+```
+
+그런 다음 이 함수를 클라이언트 컴포넌트에서 가져와 사용할 수 있습니다:
+
+```tsx
+// app/components/TodoForm.tsx
+"use client";
+
+import { addTodo } from "../actions";
+
+export default function TodoForm() {
+  return (
+    <form action={addTodo}>
+      <input name="title" type="text" required />
+      <button type="submit">추가</button>
+    </form>
+  );
+}
+```
+
+## 고급 기법: 서버 액션에서 데이터 반환하기
+
+Server Actions는 클라이언트 컴포넌트로 데이터를 반환할 수도 있습니다:
+
+```tsx
+// app/actions.ts
+"use server";
+
+export async function getTodos() {
+  const todos = await db.todo.findMany();
+  return todos;
+}
+```
+
+클라이언트에서 사용:
+
+```tsx
+// app/components/TodoList.tsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { getTodos } from "../actions";
+
+export default function TodoList() {
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
+    async function fetchTodos() {
+      const data = await getTodos();
+      setTodos(data);
+    }
+    fetchTodos();
+  }, []);
+
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>{todo.title}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 폼 상태 관리 및 오류 처리
+
+React의 `useFormState` 훅을 사용하면 폼 상태를 쉽게 관리하고 오류를 처리할 수 있습니다:
+
+```tsx
+// app/actions.ts
+"use server";
+
+export async function addTodoWithValidation(
+  prevState: any,
+  formData: FormData,
+) {
+  const title = formData.get("title") as string;
+
+  if (!title || title.length < 3) {
+    return { error: "할 일은 최소 3글자 이상이어야 합니다." };
+  }
+
+  try {
+    await db.todo.create({ data: { title } });
+    return { success: true, message: "할 일이 추가되었습니다." };
+  } catch (error) {
+    return { error: "할 일 추가 중 오류가 발생했습니다." };
+  }
+}
+```
+
+```tsx
+// app/components/TodoFormWithState.tsx
+"use client";
+
+import { useFormState } from "react-dom";
+import { addTodoWithValidation } from "../actions";
+
+const initialState = { message: null, error: null };
+
+export default function TodoFormWithState() {
+  const [state, formAction] = useFormState(addTodoWithValidation, initialState);
+
+  return (
+    <form action={formAction}>
+      <input name="title" type="text" required />
+      <button type="submit">추가</button>
+
+      {state.error && <p className="text-red-500">{state.error}</p>}
+      {state.message && <p className="text-green-500">{state.message}</p>}
+    </form>
+  );
+}
+```
+
+## 성능 최적화: 점진적 향상
+
+Server Actions는 JavaScript가 없는 환경에서도 기본적인 폼 기능이 작동하도록 점진적 향상(Progressive Enhancement)을 지원합니다:
+
+```tsx
+// app/components/TodoForm.tsx
+export default function TodoForm() {
+  return (
+    <form action={addTodo}>
+      <input name="title" type="text" required />
+      <button type="submit">추가</button>
+    </form>
+  );
+}
+```
+
+이 폼은 JavaScript가 비활성화되어 있더라도 동작합니다. JavaScript가 활성화되면 클라이언트 측 기능이 추가됩니다.
+
+## 보안 고려사항
+
+Server Actions는 자동으로 CSRF 보호 기능을 제공하여 보안을 강화합니다. 또한 서버에서 실행되기 때문에 데이터베이스 자격 증명과 같은 민감한 정보를 클라이언트에 노출하지 않습니다.
+
+## 결론
+
+Next.js의 Server Actions는 서버와 클라이언트 간의 상호작용을 단순화하고, 개발자 경험을 향상시키며, 보안과 성능을 개선합니다. 특히 폼 처리나 데이터 변경과 같은 작업에 유용하며, API 엔드포인트를 별도로 만들 필요 없이 서버 로직을 구현할 수 있습니다.
+
+Server Actions를 효과적으로 활용하면 더 빠르고 안전한 웹 애플리케이션을 구축할 수 있습니다.

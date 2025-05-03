@@ -1,17 +1,12 @@
-# Next.js 15 템플릿
+[bandal.dev](https://bandal.dev)
 
-## 기술 스택
+Personal blog of [bandal](https://github.com/kdh379).
 
-- Next.js 15.1.7
-- React 19
-- TypeScript 5
-- TailwindCSS 4
-- ESLint 9
-- Prettier 3
+## Running Locally
 
-## 추가 의존성성
-
-- Husky 8
-- Prettier 3
-- TailwindCSS 4
-- ESLint 9
+```bash
+git clone https://github.com/kdh379/bandal.dev.git
+cd bandal.dev
+pnpm i
+pnpm dev
+```

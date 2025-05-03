@@ -1,8 +1,37 @@
 @import "tailwindcss";
 
 @theme {
+  /* 기본 색상 */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* 블로그 MDX 요소 색상 */
+  --color-heading: var(--heading-color);
+  --color-link: var(--link-color);
+  --color-blockquote: var(--blockquote-color);
+  --color-hr: var(--hr-color);
+
+  /* 폰트 */
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+
+  /* 그라데이션 */
+  --gradient-primary: linear-gradient(
+    to bottom right,
+    var(--link-color),
+    rgba(100, 100, 250, 0.7)
+  );
+  --gradient-secondary: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0.01),
+    rgba(100, 100, 250, 0.05)
+  );
+  --gradient-note-card: linear-gradient(
+    to bottom right,
+    rgba(100, 100, 250, 0.1),
+    rgba(100, 100, 250, 0.05)
+  );
 }
 
 /*
@@ -24,19 +53,124 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 기본 색상 */
+  --background: #f8f9fa;
+  --foreground: #343a40;
+
+  /* 블로그 MDX 요소 색상 */
+  --heading-color: #1a202c;
+  --link-color: #3b82f6;
+  --link-hover-color: #2563eb;
+  --code-background: #e9ecef;
+  --code-color: #343a40;
+  --blockquote-border: #adb5bd;
+  --blockquote-color: #495057;
+  --hr-color: #dee2e6;
+  --table-border: #dee2e6;
+  --table-header-bg: #e9ecef;
+
+  /* 추가 디자인 요소 */
+  --content-width: 720px;
+  --content-padding: 2rem;
+  --font-sans:
+    "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+    sans-serif;
+  --font-serif: "Noto Serif KR", serif;
+  --font-mono: "JetBrains Mono", "Consolas", monospace;
+  --box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --border-radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* 기본 색상 */
+    --background: #121212;
+    --foreground: #e9ecef;
+
+    /* 블로그 MDX 요소 색상 */
+    --heading-color: #f1f3f5;
+    --link-color: #4dabf7;
+    --link-hover-color: #74c0fc;
+    --code-background: #212529;
+    --code-color: #ced4da;
+    --blockquote-border: #495057;
+    --blockquote-color: #adb5bd;
+    --hr-color: #343a40;
+    --table-border: #343a40;
+    --table-header-bg: #212529;
   }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.content-container {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 var(--content-padding);
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+/* 애니메이션 키프레임 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* View Transition API 스타일 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: ease-in-out;
 }

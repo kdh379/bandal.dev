@@ -1,101 +1,253 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+import { ViewTransition } from "@/components/ViewTransition";
+import type { ContentItem } from "@/lib/content-utils";
+import { getAllPosts, getAllNotes } from "@/lib/content-utils";
+import { cn } from "@/lib/utils";
+
+export default async function Home() {
+  const posts = await getAllPosts();
+  const notes = await getAllNotes();
+
+  // 최근 콘텐츠 (블로그 및 노트)
+  const recentPosts = posts.slice(0, 3);
+  const recentNotes = notes.slice(0, 2);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded-sm font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <ViewTransition>
+      <div className="content-container my-12 md:my-16">
+        <HeroSection />
+        <RecentPostsSection posts={recentPosts} />
+        <RecentNotesSection notes={recentNotes} />
+        <AboutSection />
+        <FooterSection />
+      </div>
+    </ViewTransition>
+  );
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+function HeroSection() {
+  return (
+    <section className="flex flex-col md:flex-row items-center justify-between gap-8 mb-20 md:mb-24">
+      <div className="md:w-7/12 animate-[fadeIn_0.8s_ease-in-out]">
+        <h1
+          className={cn(
+            "text-4xl md:text-6xl font-bold mb-4",
+            "text-heading font-serif",
+            "transition-all duration-300",
+            "leading-tight",
+          )}
+        >
+          <span className="block mt-1 text-3xl md:text-5xl opacity-80 text-link">
+            bandal.dev
+          </span>
+        </h1>
+        <p
+          className={cn(
+            "text-lg md:text-xl mb-6",
+            "text-blockquote",
+            "transition-all duration-300",
+          )}
+        >
+          개발, 디자인, 그리고 일상에 관한 이야기를 담은 공간입니다.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <Link
+            href="/blog"
+            className={cn(
+              "px-6 py-3 rounded-lg font-medium text-white",
+              "bg-link",
+              "transition duration-300 hover:translate-y-[-2px] hover:shadow-lg",
+            )}
+          >
+            블로그 보기
+          </Link>
+          <Link
+            href="/notes"
+            className={cn(
+              "px-6 py-3 rounded-lg font-medium border",
+              "text-foreground border-hr",
+              "transition duration-300 hover:translate-y-[-2px]",
+            )}
+          >
+            노트 둘러보기
+          </Link>
+        </div>
+      </div>
+      <div
+        className={cn(
+          "hidden md:block w-4/12 rounded-xl overflow-hidden",
+          "shadow-lg transition duration-300 hover:shadow-xl hover:scale-[1.02]",
+          "animate-[fadeIn_1s_ease-in-out]",
+        )}
+      >
+        <div className="w-full h-80 bg-gradient-to-br flex items-center justify-center bg-[image:var(--gradient-primary)]">
+          <div className="text-white text-center p-8">
+            <div className="text-5xl font-bold mb-4">반달</div>
+            <div className="text-lg opacity-90">BANDAL.DEV</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RecentPostsSection({ posts }: { posts: ContentItem[] }) {
+  return (
+    <section className="mb-16 animate-[fadeInUp_0.8s_ease-in-out_0.2s_backwards]">
+      <div className="flex justify-between items-end mb-6">
+        <h2 className="text-3xl font-bold text-heading font-serif">
+          최근 블로그 포스트
+        </h2>
+        <Link
+          href="/blog"
+          className="text-sm font-medium text-link transition hover:opacity-80"
+        >
+          모든 포스트 보기 →
+        </Link>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        {posts.length > 0 ? (
+          posts.map((post, index) => (
+            <Link
+              key={post.slug}
+              href={`/blog/${post.slug}`}
+              className="group"
+              style={{ animationDelay: `${0.1 + index * 0.1}s` }}
+            >
+              <article
+                className={cn(
+                  "h-full p-6 rounded-xl border border-hr",
+                  "transition duration-300 group-hover:shadow-md group-hover:translate-y-[-2px]",
+                  "animate-[fadeInUp_0.5s_ease-in-out_backwards]",
+                )}
+                style={{
+                  animationDelay: `${0.3 + index * 0.1}s`,
+                }}
+              >
+                <div className="mb-4">
+                  <time className="text-sm text-blockquote">{post.date}</time>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-heading transition group-hover:text-blue-500">
+                  {post.title}
+                </h3>
+                <p className="line-clamp-3 text-sm text-blockquote">
+                  {post.description}
+                </p>
+              </article>
+            </Link>
+          ))
+        ) : (
+          <p className="text-blockquote">아직 작성된 포스트가 없습니다.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function RecentNotesSection({ notes }: { notes: ContentItem[] }) {
+  return (
+    <section className="mb-20 animate-[fadeInUp_0.8s_ease-in-out_0.4s_backwards]">
+      <div className="flex justify-between items-end mb-6">
+        <h2 className="text-3xl font-bold text-heading font-serif">
+          최근 노트
+        </h2>
+        <Link
+          href="/notes"
+          className="text-sm font-medium text-link transition hover:opacity-80"
+        >
+          모든 노트 보기 →
+        </Link>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {notes.length > 0 ? (
+          notes.map((note, index) => (
+            <Link
+              key={note.slug}
+              href={`/notes/${note.slug}`}
+              className="group"
+              style={{ animationDelay: `${0.3 + index * 0.1}s` }}
+            >
+              <article
+                className={cn(
+                  "h-full p-6 rounded-xl bg-gradient-to-br bg-[image:var(--gradient-note-card)]",
+                  "transition duration-300 group-hover:shadow-md group-hover:translate-y-[-2px]",
+                  "animate-[fadeInUp_0.5s_ease-in-out_backwards]",
+                )}
+                style={{
+                  animationDelay: `${0.5 + index * 0.1}s`,
+                }}
+              >
+                <div className="mb-4">
+                  <time className="text-sm text-blockquote">{note.date}</time>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-heading transition group-hover:text-blue-500">
+                  {note.title}
+                </h3>
+                <p className="line-clamp-2 text-sm text-blockquote">
+                  {note.description}
+                </p>
+              </article>
+            </Link>
+          ))
+        ) : (
+          <p className="text-blockquote">아직 작성된 노트가 없습니다.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AboutSection() {
+  return (
+    <section
+      className={cn(
+        "mb-16 p-8 md:p-10 rounded-xl",
+        "bg-[rgba(0,0,0,0.02)] bg-[image:var(--gradient-secondary)]",
+        "transition duration-300 hover:shadow-lg",
+        "animate-[fadeInUp_0.8s_ease-in-out_0.6s_backwards]",
+      )}
+    >
+      <h2 className="text-2xl md:text-3xl font-bold mb-4 text-heading font-serif">
+        소개
+      </h2>
+      <p className="text-lg mb-4 text-foreground">
+        이 블로그는 Next.js와 Tailwind CSS를 사용하여 만들어졌으며, MDX를 통해
+        마크다운으로 글을 작성합니다. 개발 경험과 지식을 공유하고, 새로운 기술을
+        탐구하며 배운 내용을 기록합니다.
+      </p>
+      <Link
+        href="/about"
+        className="inline-flex items-center font-medium text-link transition hover:translate-x-1"
+      >
+        더 알아보기 <span className="ml-1">→</span>
+      </Link>
+    </section>
+  );
+}
+
+function FooterSection() {
+  return (
+    <footer className="mt-20 pt-8 border-t border-hr animate-[fadeIn_1s_ease-in-out_0.8s_backwards]">
+      <div className="flex flex-col md:flex-row justify-between items-center">
+        <div className="mb-4 md:mb-0">
+          <p className="text-sm text-blockquote">
+            © {new Date().getFullYear()} bandal.dev. All rights reserved.
+          </p>
+        </div>
+        <div className="flex gap-4">
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://github.com/kdh379"
             target="_blank"
             rel="noopener noreferrer"
+            className="text-sm text-blockquote transition hover:opacity-80"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
+            GitHub
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </footer>
   );
 }
