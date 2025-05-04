@@ -1,7 +1,7 @@
 import { Noto_Sans_KR, Noto_Serif_KR, JetBrains_Mono } from "next/font/google";
 
 import { Navigation } from "@/components/Navigation";
-import { ViewTransition } from "@/components/ViewTransition";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 import type { Metadata } from "next";
 
@@ -44,10 +44,10 @@ export default function RootLayout({
       className={`${notoSansKR.variable} ${notoSerifKR.variable} ${jetbrainsMono.variable}`}
     >
       <body className="antialiased min-h-screen flex flex-col">
-        <ViewTransition>
+        <ThemeProvider>
           <Navigation />
           <main className="flex-1 relative mt-12">{children}</main>
-        </ViewTransition>
+        </ThemeProvider>
       </body>
     </html>
   );

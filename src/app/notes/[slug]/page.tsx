@@ -1,10 +1,9 @@
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import ContentDetailHeader from "@/components/content/ContentDetailHeader";
+import { ViewTransition } from "@/components/ViewTransition";
 import { getNoteBySlug } from "@/lib/content-utils";
-import { cn } from "@/lib/utils";
 
 import type { Metadata } from "next";
 
@@ -52,31 +51,16 @@ export default async function NotePage({ params }: NotePageProps) {
   );
 
   return (
-    <div className="content-container my-16">
-      <div className="flex justify-between items-center mb-8">
-        <ContentDetailHeader
-          title={note.title}
-          date={note.date}
-          backLink={{ href: "/notes", label: "노트로 돌아가기" }}
-        />
-        <Link
-          href="/blog"
-          className={cn(
-            "flex items-center gap-2 text-sm",
-            "transition-colors hover:opacity-70",
-            "text-foreground",
-          )}
-        >
-          블로그 보기 →
-        </Link>
-      </div>
-
-      <article>
-        {/* MDX 컴포넌트 렌더링 */}
-        <div className="mdx-content">
-          <NoteContent />
-        </div>
-      </article>
+    <div className="content-container">
+      <ContentDetailHeader
+        slug={note.slug}
+        title={note.title}
+        date={note.date}
+        backLink={{ href: "/notes", label: "노트로 돌아가기" }}
+      />
+      <ViewTransition>
+        <NoteContent />
+      </ViewTransition>
     </div>
   );
 }

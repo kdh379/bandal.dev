@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { buttonVariants } from "@/components/ui/Button";
 import { ViewTransition } from "@/components/ViewTransition";
 import type { ContentItem } from "@/lib/content-utils";
 import { getAllPosts, getAllNotes } from "@/lib/content-utils";
@@ -38,7 +39,7 @@ function HeroSection() {
             "leading-tight",
           )}
         >
-          <span className="block mt-1 text-3xl md:text-5xl opacity-80 text-link">
+          <span className="block mt-1 text-3xl md:text-5xl opacity-80 text-primary">
             bandal.dev
           </span>
         </h1>
@@ -54,21 +55,20 @@ function HeroSection() {
         <div className="flex flex-wrap gap-4">
           <Link
             href="/blog"
-            className={cn(
-              "px-6 py-3 rounded-lg font-medium text-white",
-              "bg-link",
-              "transition duration-300 hover:translate-y-[-2px] hover:shadow-lg",
-            )}
+            className={buttonVariants({
+              className:
+                "transition duration-300 hover:translate-y-[-2px] hover:shadow-lg",
+            })}
           >
             블로그 보기
           </Link>
           <Link
             href="/notes"
-            className={cn(
-              "px-6 py-3 rounded-lg font-medium border",
-              "text-foreground border-hr",
-              "transition duration-300 hover:translate-y-[-2px]",
-            )}
+            className={buttonVariants({
+              variant: "outline",
+              className:
+                "transition duration-300 hover:translate-y-[-2px] hover:shadow-lg",
+            })}
           >
             노트 둘러보기
           </Link>
@@ -101,7 +101,7 @@ function RecentPostsSection({ posts }: { posts: ContentItem[] }) {
         </h2>
         <Link
           href="/blog"
-          className="text-sm font-medium text-link transition hover:opacity-80"
+          className="text-sm font-medium text-primary transition hover:opacity-80"
         >
           모든 포스트 보기 →
         </Link>
@@ -126,12 +126,16 @@ function RecentPostsSection({ posts }: { posts: ContentItem[] }) {
                   animationDelay: `${0.3 + index * 0.1}s`,
                 }}
               >
-                <div className="mb-4">
-                  <time className="text-sm text-blockquote">{post.date}</time>
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-heading transition group-hover:text-blue-500">
-                  {post.title}
-                </h3>
+                <ViewTransition name={`date-${post.slug}`}>
+                  <div className="mb-4">
+                    <time className="text-sm text-blockquote">{post.date}</time>
+                  </div>
+                </ViewTransition>
+                <ViewTransition name={`title-${post.slug}`}>
+                  <h3 className="text-xl font-bold mb-2 text-heading transition group-hover:text-blue-500">
+                    {post.title}
+                  </h3>
+                </ViewTransition>
                 <p className="line-clamp-3 text-sm text-blockquote">
                   {post.description}
                 </p>
@@ -155,7 +159,7 @@ function RecentNotesSection({ notes }: { notes: ContentItem[] }) {
         </h2>
         <Link
           href="/notes"
-          className="text-sm font-medium text-link transition hover:opacity-80"
+          className="text-sm font-medium text-primary transition hover:opacity-80"
         >
           모든 노트 보기 →
         </Link>
@@ -180,12 +184,16 @@ function RecentNotesSection({ notes }: { notes: ContentItem[] }) {
                   animationDelay: `${0.5 + index * 0.1}s`,
                 }}
               >
-                <div className="mb-4">
-                  <time className="text-sm text-blockquote">{note.date}</time>
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-heading transition group-hover:text-blue-500">
-                  {note.title}
-                </h3>
+                <ViewTransition name={`date-${note.slug}`}>
+                  <div className="mb-4">
+                    <time className="text-sm text-blockquote">{note.date}</time>
+                  </div>
+                </ViewTransition>
+                <ViewTransition name={`title-${note.slug}`}>
+                  <h3 className="text-xl font-bold mb-2 text-heading transition group-hover:text-blue-500">
+                    {note.title}
+                  </h3>
+                </ViewTransition>
                 <p className="line-clamp-2 text-sm text-blockquote">
                   {note.description}
                 </p>
@@ -220,7 +228,7 @@ function AboutSection() {
       </p>
       <Link
         href="/about"
-        className="inline-flex items-center font-medium text-link transition hover:translate-x-1"
+        className="inline-flex items-center font-medium text-primary transition hover:translate-x-1"
       >
         더 알아보기 <span className="ml-1">→</span>
       </Link>

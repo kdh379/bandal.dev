@@ -13,7 +13,7 @@ export function NavLink({ href, children, isExternal, icon }: NavLinkProps) {
       <Link
         href={href}
         target={isExternal ? "_blank" : undefined}
-        className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 transition-transform hover:scale-110"
+        className="inline-flex items-center justify-center w-8 h-8 rounded-full transition-transform hover:scale-110"
         style={{ color: "var(--foreground)" }}
         aria-label={children?.toString()}
       >

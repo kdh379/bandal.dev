@@ -1,8 +1,10 @@
 import Link from "next/link";
 
+import { ViewTransition } from "@/components/ViewTransition";
 import { cn } from "@/lib/utils";
 
 type ContentDetailHeaderProps = {
+  slug: string;
   title: string;
   date: string;
   backLink: {
@@ -12,6 +14,7 @@ type ContentDetailHeaderProps = {
 };
 
 export default function ContentDetailHeader({
+  slug,
   title,
   date,
   backLink,
@@ -22,21 +25,25 @@ export default function ContentDetailHeader({
         href={backLink.href}
         className={cn(
           "inline-flex items-center mb-6",
-          "text-link",
+          "text-primary",
           "hover:translate-x-[-4px] transition-transform",
         )}
       >
         ← {backLink.label}
       </Link>
-      <h1
-        className={cn(
-          "text-3xl md:text-4xl font-bold mb-4",
-          "text-heading font-serif",
-        )}
-      >
-        {title}
-      </h1>
-      <time className="text-base text-blockquote">{date}</time>
+      <ViewTransition name={`title-${slug}`}>
+        <h1
+          className={cn(
+            "text-3xl md:text-4xl font-bold mb-4",
+            "text-heading font-serif",
+          )}
+        >
+          {title}
+        </h1>
+      </ViewTransition>
+      <ViewTransition name={`date-${slug}`}>
+        <time className="text-base text-blockquote">{date}</time>
+      </ViewTransition>
     </div>
   );
 }

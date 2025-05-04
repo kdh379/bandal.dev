@@ -1,10 +1,9 @@
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import ContentDetailHeader from "@/components/content/ContentDetailHeader";
+import { ViewTransition } from "@/components/ViewTransition";
 import { getPostBySlug } from "@/lib/content-utils";
-import { cn } from "@/lib/utils";
 
 import type { Metadata } from "next";
 
@@ -52,28 +51,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   );
 
   return (
-    <div className="content-container my-16">
-      <div className="flex justify-between items-center mb-8">
-        <ContentDetailHeader
-          title={post.title}
-          date={post.date}
-          backLink={{ href: "/blog", label: "블로그로 돌아가기" }}
-        />
-        <Link
-          href="/notes"
-          className={cn(
-            "flex items-center gap-2 text-sm",
-            "transition-opacity hover:opacity-70",
-          )}
-        >
-          노트 보기 →
-        </Link>
-      </div>
-
-      <article>
-        {/* MDX 컴포넌트 렌더링 */}
+    <div className="content-container">
+      <ContentDetailHeader
+        slug={post.slug}
+        title={post.title}
+        date={post.date}
+        backLink={{ href: "/blog", label: "블로그로 돌아가기" }}
+      />
+      <ViewTransition>
         <PostContent />
-      </article>
+      </ViewTransition>
     </div>
   );
 }

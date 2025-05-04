@@ -1,5 +1,10 @@
 import { unstable_ViewTransition as ReactViewTransition } from "react";
 
-export function ViewTransition({ children }: { children: React.ReactNode }) {
-  return <ReactViewTransition>{children}</ReactViewTransition>;
+interface ViewTransitionProps
+  extends React.ComponentProps<typeof ReactViewTransition> {
+  children: React.ReactNode;
+}
+
+export function ViewTransition(props: ViewTransitionProps) {
+  return <ReactViewTransition {...props} />;
 }
