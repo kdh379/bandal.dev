@@ -16,7 +16,7 @@ export default async function Home() {
 
   return (
     <ViewTransition>
-      <div className="content-container my-12 md:my-16">
+      <div>
         <HeroSection />
         <RecentPostsSection posts={recentPosts} />
         <RecentNotesSection notes={recentNotes} />
@@ -101,7 +101,11 @@ function RecentPostsSection({ posts }: { posts: ContentItem[] }) {
         </h2>
         <Link
           href="/blog"
-          className="text-sm font-medium text-primary transition hover:opacity-80"
+          className={buttonVariants({
+            variant: "link",
+            color: "primary",
+            size: "sm",
+          })}
         >
           모든 포스트 보기 →
         </Link>
@@ -109,10 +113,10 @@ function RecentPostsSection({ posts }: { posts: ContentItem[] }) {
 
       <div className="grid md:grid-cols-3 gap-6">
         {posts.length > 0 ? (
-          posts.map((post, index) => (
+          posts.map(({ meta }, index) => (
             <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
+              key={meta.slug}
+              href={`/blog/${meta.slug}`}
               className="group"
               style={{ animationDelay: `${0.1 + index * 0.1}s` }}
             >
@@ -126,18 +130,18 @@ function RecentPostsSection({ posts }: { posts: ContentItem[] }) {
                   animationDelay: `${0.3 + index * 0.1}s`,
                 }}
               >
-                <ViewTransition name={`date-${post.slug}`}>
+                <ViewTransition name={`date-${meta.slug}`}>
                   <div className="mb-4">
-                    <time className="text-sm text-blockquote">{post.date}</time>
+                    <time className="text-sm text-blockquote">{meta.date}</time>
                   </div>
                 </ViewTransition>
-                <ViewTransition name={`title-${post.slug}`}>
+                <ViewTransition name={`title-${meta.slug}`}>
                   <h3 className="text-xl font-bold mb-2 text-heading transition group-hover:text-blue-500">
-                    {post.title}
+                    {meta.title}
                   </h3>
                 </ViewTransition>
                 <p className="line-clamp-3 text-sm text-blockquote">
-                  {post.description}
+                  {meta.description}
                 </p>
               </article>
             </Link>
@@ -159,7 +163,11 @@ function RecentNotesSection({ notes }: { notes: ContentItem[] }) {
         </h2>
         <Link
           href="/notes"
-          className="text-sm font-medium text-primary transition hover:opacity-80"
+          className={buttonVariants({
+            variant: "link",
+            color: "primary",
+            size: "sm",
+          })}
         >
           모든 노트 보기 →
         </Link>
@@ -167,10 +175,10 @@ function RecentNotesSection({ notes }: { notes: ContentItem[] }) {
 
       <div className="grid md:grid-cols-2 gap-6">
         {notes.length > 0 ? (
-          notes.map((note, index) => (
+          notes.map(({ meta }, index) => (
             <Link
-              key={note.slug}
-              href={`/notes/${note.slug}`}
+              key={meta.slug}
+              href={`/notes/${meta.slug}`}
               className="group"
               style={{ animationDelay: `${0.3 + index * 0.1}s` }}
             >
@@ -184,18 +192,18 @@ function RecentNotesSection({ notes }: { notes: ContentItem[] }) {
                   animationDelay: `${0.5 + index * 0.1}s`,
                 }}
               >
-                <ViewTransition name={`date-${note.slug}`}>
+                <ViewTransition name={`date-${meta.slug}`}>
                   <div className="mb-4">
-                    <time className="text-sm text-blockquote">{note.date}</time>
+                    <time className="text-sm text-blockquote">{meta.date}</time>
                   </div>
                 </ViewTransition>
-                <ViewTransition name={`title-${note.slug}`}>
+                <ViewTransition name={`title-${meta.slug}`}>
                   <h3 className="text-xl font-bold mb-2 text-heading transition group-hover:text-blue-500">
-                    {note.title}
+                    {meta.title}
                   </h3>
                 </ViewTransition>
                 <p className="line-clamp-2 text-sm text-blockquote">
-                  {note.description}
+                  {meta.description}
                 </p>
               </article>
             </Link>
@@ -247,7 +255,7 @@ function FooterSection() {
         </div>
         <div className="flex gap-4">
           <a
-            href="https://github.com/kdh379"
+            href="https://github.com/kdh379/bandal.dev"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-blockquote transition hover:opacity-80"

@@ -26,32 +26,32 @@ export default function ContentList({
       {filteredYears.length > 0 ? (
         filteredYears.map((year) => (
           <div key={year} className="mb-16">
-            <h2 className="text-6xl font-bold -ml-4 mb-8 opacity-20 text-heading font-serif">
+            <h2 className="text-6xl font-bold -ml-4 mb-8 opacity-20 text-heading font-serif pointer-events-none">
               {year}
             </h2>
             <div className="space-y-8 -mt-16">
-              {contentByYear[year].map((item) => (
-                <article key={item.slug} className="group">
+              {contentByYear[year].map(({ meta }) => (
+                <article key={meta.slug} className="group">
                   <Link
-                    href={`${contentPath}/${item.slug}`}
+                    href={`${contentPath}/${meta.slug}`}
                     className="block group-hover:opacity-80 transition-opacity"
                   >
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
-                      <ViewTransition name={`title-${item.slug}`}>
+                      <ViewTransition name={`title-${meta.slug}`}>
                         <h3 className="text-xl font-bold flex-grow text-heading">
-                          {item.title}
+                          {meta.title}
                         </h3>
                       </ViewTransition>
                       <div className="flex items-center gap-4">
-                        <ViewTransition name={`date-${item.slug}`}>
+                        <ViewTransition name={`date-${meta.slug}`}>
                           <time className="text-sm whitespace-nowrap text-blockquote">
-                            {item.date}
+                            {meta.date}
                           </time>
                         </ViewTransition>
                       </div>
                     </div>
                     <p className="mt-2 text-base line-clamp-2 text-blockquote">
-                      {item.description}
+                      {meta.description}
                     </p>
                   </Link>
                 </article>

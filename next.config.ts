@@ -4,6 +4,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   pageExtensions: ["mdx", "tsx"],
+  redirects: async () => [
+    {
+      source: "/resume",
+      destination: "/about",
+      permanent: true,
+    },
+  ],
   experimental: {
     mdxRs: true,
     viewTransition: true,

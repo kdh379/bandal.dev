@@ -1,4 +1,5 @@
 import { Noto_Sans_KR, Noto_Serif_KR, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 
 import { Navigation } from "@/components/Navigation";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -28,6 +29,12 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const pretendard = localFont({
+  src: "./fonts/PretendardVariable.woff2",
+  display: "swap",
+  weight: "45 920",
+});
+
 export const metadata: Metadata = {
   title: "bandal.dev",
   description: "Next.js와 MDX로 만든 개인 블로그입니다.",
@@ -41,12 +48,14 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${notoSansKR.variable} ${notoSerifKR.variable} ${jetbrainsMono.variable}`}
+      className={`${notoSansKR.variable} ${notoSerifKR.variable} ${jetbrainsMono.variable} ${pretendard.className}`}
     >
       <body className="antialiased min-h-screen flex flex-col">
         <ThemeProvider>
           <Navigation />
-          <main className="flex-1 relative mt-12">{children}</main>
+          <main className="flex-1 relative my-12 md:my-16 content-container">
+            {children}
+          </main>
         </ThemeProvider>
       </body>
     </html>

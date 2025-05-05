@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { buttonVariants } from "@/components/ui/Button";
 import { ViewTransition } from "@/components/ViewTransition";
 import { cn } from "@/lib/utils";
 
@@ -23,11 +24,11 @@ export default function ContentDetailHeader({
     <div className="mb-8">
       <Link
         href={backLink.href}
-        className={cn(
-          "inline-flex items-center mb-6",
-          "text-primary",
-          "hover:translate-x-[-4px] transition-transform",
-        )}
+        className={buttonVariants({
+          variant: "link",
+          color: "primary",
+          className: "hover:translate-x-[-4px]",
+        })}
       >
         ← {backLink.label}
       </Link>

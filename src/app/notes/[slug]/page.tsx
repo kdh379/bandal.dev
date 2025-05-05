@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 
 import ContentDetailHeader from "@/components/content/ContentDetailHeader";
@@ -28,8 +27,8 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${note.title} - bandal.dev`,
-    description: note.description,
+    title: `${note.meta.title} - bandal.dev`,
+    description: note.meta.description,
   };
 }
 
@@ -41,25 +40,16 @@ export default async function NotePage({ params }: NotePageProps) {
     notFound();
   }
 
-  // Dynamic import로 MDX 컴포넌트 가져오기
-  const NoteContent = dynamic(
-    () => import(`@/content/notes/${slug}/index.mdx`),
-    {
-      loading: () => <div className="py-8">콘텐츠를 불러오는 중...</div>,
-      ssr: true, // 서버 사이드 렌더링 활성화
-    },
-  );
-
   return (
-    <div className="content-container">
+    <div>
       <ContentDetailHeader
-        slug={note.slug}
-        title={note.title}
-        date={note.date}
+        slug={note.meta.slug}
+        title={note.meta.title}
+        date={note.meta.date}
         backLink={{ href: "/notes", label: "노트로 돌아가기" }}
       />
       <ViewTransition>
-        <NoteContent />
+        <note.Component />
       </ViewTransition>
     </div>
   );

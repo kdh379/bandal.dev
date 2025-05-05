@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { buttonVariants } from "@/components/ui/Button";
+
 interface NavLinkProps {
   href: string;
   children: React.ReactNode;
@@ -13,8 +15,12 @@ export function NavLink({ href, children, isExternal, icon }: NavLinkProps) {
       <Link
         href={href}
         target={isExternal ? "_blank" : undefined}
-        className="inline-flex items-center justify-center w-8 h-8 rounded-full transition-transform hover:scale-110"
-        style={{ color: "var(--foreground)" }}
+        className={buttonVariants({
+          variant: "light",
+          color: "foreground",
+          isIconOnly: true,
+          radius: "full",
+        })}
         aria-label={children?.toString()}
       >
         {icon}
@@ -26,8 +32,10 @@ export function NavLink({ href, children, isExternal, icon }: NavLinkProps) {
     <Link
       href={href}
       target={isExternal ? "_blank" : undefined}
-      className="transition-colors hover:text-blue-500 font-medium"
-      style={{ color: "var(--foreground)" }}
+      className={buttonVariants({
+        variant: "light",
+        color: "foreground",
+      })}
     >
       {children}
     </Link>

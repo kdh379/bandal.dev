@@ -16,7 +16,7 @@ Server Actions는 Next.js 14에서 정식 출시된 기능으로, 폼 제출이�
 Server Actions를 사용하는 가장 간단한 방법은 함수 상단에 'use server' 지시문을 추가하는 것입니다:
 
 ```tsx
-// app/actions.ts
+// [!code filename:app/actions.ts]
 "use server";
 
 export async function addTodo(formData: FormData) {
@@ -29,7 +29,7 @@ export async function addTodo(formData: FormData) {
 그런 다음 이 함수를 클라이언트 컴포넌트에서 가져와 사용할 수 있습니다:
 
 ```tsx
-// app/components/TodoForm.tsx
+// [!code filename:app/components/TodoForm.tsx]
 "use client";
 
 import { addTodo } from "../actions";

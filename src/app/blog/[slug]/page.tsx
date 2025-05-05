@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 
 import ContentDetailHeader from "@/components/content/ContentDetailHeader";
@@ -28,8 +27,8 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${post.title} - bandal.dev`,
-    description: post.description,
+    title: `${post.meta.title} - bandal.dev`,
+    description: post.meta.description,
   };
 }
 
@@ -41,25 +40,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  // Dynamic import로 MDX 컴포넌트 가져오기
-  const PostContent = dynamic(
-    () => import(`@/content/posts/${slug}/index.mdx`),
-    {
-      loading: () => <div className="py-8">콘텐츠를 불러오는 중...</div>,
-      ssr: true, // 서버 사이드 렌더링 활성화
-    },
-  );
-
   return (
-    <div className="content-container">
+    <div>
       <ContentDetailHeader
-        slug={post.slug}
-        title={post.title}
-        date={post.date}
+        slug={post.meta.slug}
+        title={post.meta.title}
+        date={post.meta.date}
         backLink={{ href: "/blog", label: "블로그로 돌아가기" }}
       />
       <ViewTransition>
-        <PostContent />
+        <post.Component />
       </ViewTransition>
     </div>
   );

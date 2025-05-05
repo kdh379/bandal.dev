@@ -7,26 +7,28 @@ import { variants } from "@/lib/variant";
 import type { VariantProps } from "tailwind-variants";
 
 const buttonVariants = tv({
-  base: "relative inline-flex items-center justify-center whitespace-nowrap transition overflow-hidden",
+  base: "relative inline-flex items-center justify-center whitespace-nowrap transition overflow-hidden cursor-pointer",
   variants: {
     variant: {
       solid: "",
       outline: "border bg-transparent",
       link: "underline-offset-4 hover:underline",
+      light: "",
     },
     color: {
       primary: "",
-      secondary: "",
+      foreground: "",
     },
     size: {
       sm: "text-sm px-4 py-2",
-      md: "text-base px-6 py-3",
-      lg: "text-lg px-8 py-4",
+      md: "text-base px-6 py-3 font-medium",
+      lg: "text-lg px-8 py-4 font-bold",
     },
     radius: {
       sm: "rounded-sm",
       md: "rounded-md",
       lg: "rounded-lg",
+      full: "rounded-full",
     },
     isDisabled: {
       true: "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -52,8 +54,8 @@ const buttonVariants = tv({
     },
     {
       variant: "solid",
-      color: "secondary",
-      className: variants.solid.secondary,
+      color: "foreground",
+      className: variants.solid.foreground,
     },
     {
       variant: "outline",
@@ -62,8 +64,8 @@ const buttonVariants = tv({
     },
     {
       variant: "outline",
-      color: "secondary",
-      className: variants.outline.secondary,
+      color: "foreground",
+      className: variants.outline.foreground,
     },
     {
       variant: "link",
@@ -72,24 +74,39 @@ const buttonVariants = tv({
     },
     {
       variant: "link",
-      color: "secondary",
-      className: variants.link.secondary,
+      color: "foreground",
+      className: variants.link.foreground,
+    },
+    {
+      variant: "light",
+      color: "primary",
+      className: [variants.light.primary, "hover:bg-primary/10"],
+    },
+    {
+      variant: "light",
+      color: "foreground",
+      className: [variants.light.foreground, "hover:bg-foreground/10"],
+    },
+    // link
+    {
+      variant: "link",
+      className: "p-0",
     },
     // Icon Only
     {
       isIconOnly: true,
       size: "sm",
-      class: "min-w-8 w-8 h-8",
+      class: "min-w-8 size-8",
     },
     {
       isIconOnly: true,
       size: "md",
-      class: "min-w-10 w-10 h-10",
+      class: "min-w-10 size-10",
     },
     {
       isIconOnly: true,
       size: "lg",
-      class: "min-w-12 w-12 h-12",
+      class: "min-w-12 size-12",
     },
     // hover
     {
@@ -107,6 +124,9 @@ function Button({
   className,
   color,
   size,
+  radius,
+  isIconOnly,
+  isDisabled,
   variant = "solid",
   ...rest
 }: ButtonProps) {
@@ -123,7 +143,15 @@ function Button({
   return (
     <button
       ref={containerRef as React.RefObject<HTMLButtonElement>}
-      className={buttonVariants({ color, size, variant, className })}
+      className={buttonVariants({
+        color,
+        size,
+        variant,
+        radius,
+        isIconOnly,
+        isDisabled,
+        className,
+      })}
       onClick={handleClick}
       {...rest}
     >

@@ -1,20 +1,26 @@
 const solid = {
   primary: "bg-primary text-primary-foreground",
-  secondary: "bg-secondary text-secondary-foreground",
+  foreground: "bg-foreground text-background",
 };
 
 const outline = {
   primary: "border-primary text-primary",
-  secondary: "border-secondary text-secondary",
+  foreground: "border-foreground text-foreground",
 };
 
 const link = {
   primary: "bg-transparent text-primary",
-  secondary: "bg-transparent text-secondary",
+  foreground: "bg-transparent text-foreground",
+};
+
+const light = {
+  primary: "bg-transparent text-primary",
+  foreground: "bg-transparent text-foreground",
 };
 
 export const variants = {
   solid,
   outline,
   link,
+  light,
 };

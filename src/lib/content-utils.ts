@@ -6,13 +6,16 @@ import { cache } from "react";
 export type ContentType = "blog" | "note";
 
 export type ContentItem = {
-  slug: string;
-  title: string;
-  description: string;
-  date: string;
-  published?: boolean;
-  year: number;
-  type?: ContentType;
+  Component: React.ComponentType<any>;
+  meta: {
+    slug: string;
+    title: string;
+    description: string;
+    date: string;
+    published?: boolean;
+    year: number;
+    type?: ContentType;
+  };
 };
 
 // 콘텐츠 디렉토리 경로
@@ -25,12 +28,12 @@ const contentDirectories = {
  * 콘텐츠를 위한 유틸리티 함수들
  */
 
-// MDX 모듈에서 메타데이터 가져오기
-export async function getMeta(type: ContentType, slug: string) {
+// MDX 모듈 가져오기
+export async function getModule(type: ContentType, slug: string) {
   try {
     const contentPath = type === "blog" ? "posts" : "notes";
     const content = await import(`@/content/${contentPath}/${slug}/index.mdx`);
-    return content.meta || null;
+    return content || null;
   } catch (error) {
     console.error(`Error importing module for ${type}/${slug}:`, error);
     return null;
@@ -52,16 +55,16 @@ export function getSlugs(type: ContentType) {
 }
 
 // 연도별로 콘텐츠 그룹화하는 함수
-export function groupContentByYear<T extends { year: number }>(
+export function groupContentByYear<T extends { meta: { year: number } }>(
   content: T[],
 ): Record<number, T[]> {
   const contentByYear: Record<number, T[]> = {};
 
   content.forEach((item) => {
-    if (!contentByYear[item.year]) {
-      contentByYear[item.year] = [];
+    if (!contentByYear[item.meta.year]) {
+      contentByYear[item.meta.year] = [];
     }
-    contentByYear[item.year].push(item);
+    contentByYear[item.meta.year].push(item);
   });
 
   // 연도를 내림차순으로 정렬
@@ -79,15 +82,15 @@ export function groupContentByYear<T extends { year: number }>(
 // 특정 슬러그의 콘텐츠 메타데이터를 가져오는 함수
 export const getContentBySlug = cache(
   async (type: ContentType, slug: string): Promise<ContentItem | null> => {
-    const meta = await getMeta(type, slug);
+    const contentModule = await getModule(type, slug);
 
-    if (!meta) {
+    if (!contentModule.default) {
       return null;
     }
 
     try {
       // 날짜 파싱 및 년도 추출
-      const dateObj = new Date(meta.date);
+      const dateObj = new Date(contentModule.meta.date);
       const year = dateObj.getFullYear();
 
       // 한글 날짜 형식으로 변환
@@ -98,13 +101,14 @@ export const getContentBySlug = cache(
       });
 
       return {
-        slug,
-        title: meta.title,
-        description: meta.description || "",
-        date: formattedDate,
-        published: meta.published !== false,
-        year,
-        type,
+        Component: contentModule.default,
+        meta: {
+          slug,
+          ...contentModule.meta,
+          date: formattedDate,
+          year,
+          type,
+        },
       };
     } catch (error) {
       console.error(`Error processing meta for ${type}/${slug}:`, error);
@@ -122,9 +126,13 @@ export async function getAllContent(type: ContentType): Promise<ContentItem[]> {
   // null이 아닌 콘텐츠만 필터링하고, published가 true인 것만 포함
   return content
     .filter(
-      (item): item is ContentItem => item !== null && item.published !== false,
+      (item): item is ContentItem =>
+        item !== null && item.meta.published !== false,
     )
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.meta.date).getTime() - new Date(a.meta.date).getTime(),
+    );
 }
 
 // 연도별로 콘텐츠 가져오기

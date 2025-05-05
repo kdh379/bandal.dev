@@ -6,9 +6,9 @@ import { ThemeSwitch } from "@/components/ThemeSwitch";
 export function Navigation() {
   return (
     <nav className="sticky top-0 z-10 backdrop-blur-md border-b py-3 transition-all duration-300 shadow-sm">
-      <div className="content-container flex justify-between items-center">
+      <div className="flex justify-between items-center content-container">
         <Logo />
-        <ul className="flex gap-6 items-center">
+        <ul className="flex items-center">
           <li className="hidden md:block">
             <NavLink href="/blog">블로그</NavLink>
           </li>
@@ -27,10 +27,8 @@ export function Navigation() {
               GitHub
             </NavLink>
           </li>
-          <li>
-            <ThemeSwitch />
-          </li>
         </ul>
+        <ThemeSwitch />
       </div>
     </nav>
   );

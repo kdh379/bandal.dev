@@ -62,7 +62,7 @@
 }
 
 .dark {
-  --background: oklch(0.15 0 0);
+  --background: oklch(0.14 0.005 0);
   --foreground: oklch(0.93 0 0);
   --heading-color: oklch(0.9 0 0);
   --primary: oklch(0.7 0.2 250);
@@ -98,8 +98,23 @@
     font-family: var(--font-mono);
   }
 
+  pre[class*="shiki"] {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+  }
+
+  pre > code {
+    display: flex;
+    flex-direction: column;
+
+    span[class*="line"] {
+      min-height: 1.5rem;
+    }
+  }
+
   .content-container {
     max-width: var(--content-width);
+    width: 100%;
     margin: 0 auto;
     padding: 0 var(--content-padding);
   }

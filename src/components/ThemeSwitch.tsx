@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { MoonIcon, SunIcon, DesktopIcon } from "@/components/ThemeIcons";
+import { Button } from "@/components/ui/Button";
 import { useCursor } from "@/hooks/useCursor";
 
 type Theme = "light" | "dark" | "system";
@@ -47,15 +48,19 @@ export function ThemeSwitch() {
         style={cursorStyle}
       />
       {themeOptions.map(({ value, icon }) => (
-        <button
+        <Button
           key={value}
+          isIconOnly
+          color="foreground"
+          variant="light"
+          size="sm"
+          radius="full"
           data-theme={value}
           onClick={() => setTheme(value)}
-          className={"p-1.5"}
           aria-label={`${value} 테마로 변경`}
         >
           {icon}
-        </button>
+        </Button>
       ))}
     </div>
   );
