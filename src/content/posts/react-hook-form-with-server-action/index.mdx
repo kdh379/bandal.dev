@@ -1,0 +1,583 @@
+import analyzeClient from "./analyze-client.png";
+import analyzeNodejs from "./analyze-nodejs.png";
+import { Image, Video } from "@/components/Media";
+
+export const meta = {
+  title: "React Hook Form에서 Next.js Server Actions 사용하기",
+  description:
+    "React Hook Form으로 Next.js 14에서 추가된 ServerActions와 Zod를 이용한 Input 검증 방법에 대해 작성하였습니다.",
+  date: "2024-05-13",
+};
+
+만약 React에서 Form을 사용할 때 리렌더링 문제에 대해 조사해 본 적이 있으시다면, [React-Hook-Form](https://react-hook-form.com/)에 대해 들어보셨을 것입니다. React-Hook-Form은 아래의 기능들을 제공합니다.
+
+- Input 입력마다 상태가 변경되어 리렌더링 되는 문제를 `register`의 ref를 사용하여 해결합니다.
+- `Controller`를 통해 외부 라이브러리와 쉽게 연동할 수 있습니다.(Input에 사용 시 입력마다 리렌더링됩니다.)
+- 복잡한 검증 로직을 간단하게 작성할 수 있습니다.
+- `FormContext`를 활용하여 유연하게 Form 컴포넌트를 구성할 수 있어서, Props Drilling을 피할 수 있습니다.
+
+그리고 최근, Next.js 14에서 Server Actions가 안정화 되었다는 발표가 나오면서, React-Hook-Form에서 Server Actions를 사용해보고 싶어졌습니다. 이번 글에선 제가 Next.js 14에서 React-Hook-Form으로 Server Action을 수행하며 Client Side에서 성공/실패 핸들링을 아래 두가지 방법으로 소개하겠습니다.
+
+- RHF handleSubmit + `onSubmit attr` 사용하기
+- useFormState + `action attr`사용하기
+
+React-Hook-Form은 아직까지 Server Actions를 지원하지 않고 있지만, 향 후 지원 예정인 점을 참고해주세요. 이번 글에선 7.51.4 버전을 사용하였습니다. 그전에 Server Actions에 대해 간단히 설명드리겠습니다.
+
+## Server Actions란?
+
+**[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)은 서버에서 실행되는 비동기 함수입니다.** RSC(React-Server-Component)에서 비동기로 서버 자원을 가져오거나, `form`으로 양식 제출 및 데이터 변경을 처리할 수 있습니다.
+
+Server Actions를 사용하면 다음의 이점을 가질 수 있습니다.
+
+**Server Actions의 장점**
+
+1. **보안 강화**
+
+- 중요한 로직을 서버에서 실행하여 클라이언트측 보안 취약점을 최소화할 수 있습니다.
+- 민감한 데이터 및 API 주소와 키를 노출하지 않을 수 있습니다.
+
+2. **성능 최적화**
+
+- `useEffect` or `useQuery`를 사용하지 않아서 클라이언트-서버간 왕복 횟수를 줄일 수 있습니다.
+
+3. **코드 분할 및 관리의 용이성**
+
+- 서버와 클라이언트 코드를 명확히 분리하여 관리할 수 있습니다.
+- 비즈니스 로직을 서버에 집중시켜 관리와 유지보수가 용이합니다.
+
+**Server Actions로 Form 양식 제출 시 이점**
+
+1. **점진적 향상 (Progressvie Enhancement)**
+
+- JS를 불러오는 중이거나, 비활성화된 상태더라도 양식을 제출할 수 있습니다.
+
+2. **서버측 유효성 검사**
+
+- 서버측에서 폼 데이터 유효성 검사를 수행할 수 있습니다.
+- 클라이언트측에서 검증 우회 시도를 방지할 수 있습니다.
+
+## 1안) RHF handleSubmit + onSubmit 사용하기
+
+**2024-10-01에 작성되었습니다.**
+
+RHF(React-Hook-Form)와 **Server Action**을 함께 사용할 때, `<form />`요소의 `action`속성을 사용하는데 제한이 있습니다.
+
+- **점진적 향상 사용의 어려움**: RHF은 `handleSubmit`으로 동작하나, `action`은 `useFormState`의 `dispacth`함수를 실행해야 하며, 이는 RHF의 `formState`를 변경시키지 못합니다.
+- **폼 제출 후 처리**: `useFormState`의 `disptach`를 사용하여 폼 제출 후 처리 시 `useEffect`의 의존성 배열을 통해야만 합니다.
+
+### useFormState와의 차이점
+
+`action` 속성으로 `dispatch`를 수행하는 것과 직접 `server action`함수를 실행하는건 **점진적 향상**의 가능 유무에 있습니다. 이를 배제하는 대신, `server action` 함수의 반환값을 이용하여 성공실/실패 시 로직을 **RHF**의 `handleSubmit` 함수 내에서 직접 처리할 수 있습니다.
+
+비교표
+
+| 구분 | useFormState + action | RHF handleSubmit + onSubmit |
+| --- | --- | --- |
+| 보안 강화 | 가능 | 가능 |
+| 점진적 향상 | 가능 | 불가능 |
+| 폼 상태 관리 | react 18: `useFormStatus` pending<br/>react 19: `useActionState` isPending | RHF `formState` |
+| 폼 제출 후 처리 | `useEffect`의 의존성 배열 | `handleSubmit` 내부에서 직접 처리 |
+| 유효성 검사 | 서버측 중심 | 클라이언트측, 서버 측 병행 가능 |
+
+**useFormState + action**
+
+```tsx
+const [state, formAction] = useFormState(submitForm, null);
+const form = useForm();
+
+useEffect(() => {
+  if (!state) return;
+
+  switch (state.code) {
+    case "SUCCESS":
+      console.log("Form submitted successfully!");
+      break;
+    case "VALIDATION_ERROR":
+      console.log("Validation Error", state.fieldErrors);
+      break;
+    case "EXISTS_ERROR":
+      console.log("Exists Error", state.key, state.message);
+      break;
+    case "INTERNAL_ERROR":
+      console.log("Internal Error", state.err);
+      break;
+  }
+}, [state]);
+
+return (
+  <Form {...form}>
+    <form action={formAction}>...</form>
+  </Form>
+);
+
+const SubmitButton = () => {
+  const { isPending } = useFormStatus();
+  return (
+    <button type="submit" disabled={isPending}>
+      Submit
+    </button>
+  );
+};
+```
+
+**RHF handleSubmit**
+
+```tsx
+const form = useForm();
+
+const onSubmit = async (data: FormValues) => {
+  const state = await submitForm(null, data);
+
+  switch (state.code) {
+    case "SUCCESS":
+      console.log("Form submitted successfully!");
+      break;
+    case "VALIDATION_ERROR":
+      console.log("Validation Error", state.fieldErrors);
+      break;
+    case "EXISTS_ERROR":
+      console.log("Exists Error", state.key, state.message);
+      break;
+    case "INTERNAL_ERROR":
+      console.log("Internal Error", state.err);
+      break;
+  }
+};
+
+return (
+  <Form {...form}>
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      ...
+      <button type="submit" disabled={form.formState.isSubmitting}>
+        Submit
+      </button>
+    </form>
+  </Form>
+);
+```
+
+**참고를 위해 Next.js 대규모 오픈 소스를 참고하였습니다.**
+
+- [inbox-zero](https://github.com/elie222/inbox-zero)
+  - useForm + handleSubmit 내에서 server action 함수 실행
+- [formbricks](https://github.com/formbricks/formbricks)
+  - useForm + handleSubmit 내에서 server action 함수 실행
+- [dub](https://github.com/dubinc/dub)
+  - useFormState + action 사용, useEffect로 상태 처리
+  - [next-safe-action](https://www.npmjs.com/package/next-safe-action/v/4.0.4)의 `useAction`훅을 사용한 상태 처리
+
+## 2안) useFormState + action 사용하기
+
+꼭 2안을 사용할 필요는 없습니다. 아래는 React-Hook-Form 라이브러리를 사용하며 **점진적 향상을 취하기 위해 행하는 복잡한 작업들을 소개합니다.** 위의 **비교표**와 같이 차이는 크지 않지만 복잡도는 더욱 높아집니다.
+
+아래 작성된 소스 코드는 Github 저장소에서 확인할 수 있습니다. Github Repo: [React-Hook-Form-Server-Actions](https://github.com/kdh379/react-hook-form-server-actions)
+
+아래 설명은 Next.js 14 + shadcn-ui를 사용하여 작성되었습니다.
+
+**구현에 필요한 목록은 다음과 같습니다.** **1. useFormState의 dispatch를 `<form />`의 action으로 사용하기** **2. useFormState의 state를 useEffect의 의존성 배열로 사용하여 상태에 따라 처리하기**
+
+## Form 작성
+
+### Form Page
+
+React-Hook-Form은 Context 기반이여서 클라이언트 컴포넌트에서만 동작합니다. 파일 상단에 `use client` 를 선언하여 사용합니다. Action함수를 사용하기 위해 `useFormState`를 사용하여 Server Action 함수를 주입합니다. **점진적 향상**을 사용하기 위해선 `<form />`의 `action` 속성에 `useFormState`의 `dispatch`를 넣어주어야 합니다.
+
+`/src/app/client-side-form.tsx`
+
+```tsx
+"use client";
+
+export default function ClientSideForm() {
+  const [state, dispatch] = useFormState(submitForm, null);
+  const form = useFormAction<FormValues>({
+    state,
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    onSuccess: () => {
+      toast({
+        title: "Form submitted successfully!",
+        duration: 5000,
+      });
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form action={dispatch} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center justify-between">
+                Email
+                <FormMessage />
+              </FormLabel>
+              <FormControl>
+                <Input {...field} type="email" placeholder="abc@abc.com" />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center justify-between">
+                Password
+                <FormMessage />
+              </FormLabel>
+              <FormControl>
+                <Input {...field} type="password" placeholder="********" />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <div className="flex justify-end">
+          <SubmitButton />
+        </div>
+      </form>
+    </Form>
+  );
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return <Button isLoading={pending}>Submit</Button>;
+}
+```
+
+### React-Hook-Form의 Server-Actions
+
+action의 `disptach`함수는 RHF의 formState를 변경시키지 못하므로, 추가 작업이 필요합니다. 그래서 저는 Custom Hook을 만들어서 Form의 상태를 관리하였습니다.
+
+#### 에러 헨들링 종류 정의
+
+먼저, 에러 헨들링을 위한 type 파일을 작성합니다.
+
+아래 중 VALIDATION_ERROR는 Zod를 통해 검증된 데이터가 아닌 경우 발생하는 에러입니다. 나머지는 사용할 상태를 커스텀하여 작성합니다.
+
+`/src/types/action.d.ts`
+
+```ts
+type ActionState =
+  | {
+      code: "SUCCESS"; // 성공
+      message: string;
+    }
+  | {
+      code: "VALIDATION_ERROR"; // Zod 유효성 검사 에러
+      fieldErrors: {
+        [field: string]: string[];
+      };
+    }
+  | {
+      code: "EXISTS_ERROR"; // 커스텀 에러
+      key: string;
+      message: string;
+    }
+  | {
+      code: "INTERNAL_ERROR"; // 알 수 없는 오류
+      err: any;
+    };
+```
+
+#### Custom Hook 작성
+
+다음, `useForm`훅을 대체할 Custom Hook을 작성합니다. `useFormState` 훅에서 반환된 state를 `useEffect`의 의존성 배열로 사용하여, 상태에 따라 처리할 수 있도록 합니다. 또한, 성공 시 Client 단에서 처리할 수 있는 `onSuccess` 함수를 인자로 받아서 처리합니다.
+
+`/src/hooks/useFormAction.ts`
+
+```ts
+"use client";
+
+import { useCallback, useEffect } from "react";
+import { FieldValues, useForm, UseFormProps } from "react-hook-form";
+
+import { toast } from "@/components/ui/use-toast";
+
+type UseFormActionProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TContext = any,
+> = UseFormProps<TFieldValues, TContext> & {
+  state: ActionState | unknown;
+  onSuccess?: () => void;
+};
+
+export function useFormAction<
+  TFieldValues extends FieldValues = FieldValues,
+  TContext = any,
+>({
+  state,
+  onSuccess: onSuccessProp,
+  ...props
+}: UseFormActionProps<TFieldValues, TContext>) {
+  const form = useForm({
+    ...props,
+  });
+
+  const onSuccess = useCallback(() => {
+    onSuccessProp?.();
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    if (!hasState(state)) return;
+    form.clearErrors();
+
+    switch (state.code) {
+      case "INTERNAL_ERROR":
+        toast({
+          title: "Something went wrong.",
+          description: "Please try again later.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        break;
+      case "VALIDATION_ERROR":
+        const { fieldErrors } = state;
+        Object.keys(fieldErrors).forEach((key) => {
+          form.setError(key as any, {
+            message: fieldErrors[key].flat().join(" "),
+          });
+        });
+        break;
+      case "EXISTS_ERROR":
+        form.setError(state.key as any, { message: state.message });
+        break;
+      case "SUCCESS":
+        toast({
+          title: state.message,
+          duration: 5000,
+        });
+        onSuccess();
+        form.reset();
+        break;
+    }
+  }, [state, form, handleSuccess]);
+
+  return {
+    ...form,
+  };
+}
+
+const hasState = (state: ActionState | unknown): state is ActionState => {
+  if (!state || typeof state !== "object") return false;
+  return "code" in state;
+};
+```
+
+### Server Action 작성
+
+우선 아래 전체 코드입니다.
+
+`/src/app/actions.ts`
+
+```ts
+"use server";
+
+import { z } from "zod";
+
+const formSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+// 이미 존재하는 유저 이메일
+const EXISTS_USER = ["abc@abc.com"];
+
+export type FormValues = z.infer<typeof formSchema>;
+
+export async function submitForm(
+  _prevState: any,
+  formData: FormData,
+): Promise<ActionState | void> {
+  // 전달받은 FormData를 Zod로 검증
+  // 커스텀 에러 핸들링을 위해 사용 safeParse 사용
+  const input = formSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  if (!input.success) {
+    const { fieldErrors } = input.error.flatten();
+    return {
+      code: "VALIDATION_ERROR",
+      fieldErrors,
+    };
+  }
+
+  try {
+    if (EXISTS_USER.includes(input.data.email)) {
+      return {
+        code: "EXISTS_ERROR",
+        key: "email",
+        message: "User already exists with this email.",
+      };
+    }
+
+    // object equality check
+    return {
+      code: "SUCCESS",
+      message: "Form submitted successfully!",
+    };
+  } catch (error) {
+    return {
+      code: "INTERNAL_ERROR",
+      err: error,
+    };
+  }
+}
+```
+
+#### Form Zod 스키마 정의
+
+우선 Form 내에서 사용할 스키마를 zod를 이용하여 정의해줍니다. 또한, React-Hook-Form에서 Type를 활용하여 사용하기 위해 `FormValues`를 정의하고 export 합니다.
+
+```ts
+import { z } from "zod";
+
+const formSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+export type FormValues = z.infer<typeof formSchema>;
+```
+
+#### Zod를 활용한 유효성 검사
+
+전달받은 FormData를 Zod로 검증합니다. `parse`함수를 사용할 경우 에러 발생 시 throw를 하기 때문에, `safeParse`를 사용하여 에러 핸들링을 할 수 있습니다. custom Hook에서 정의한대로, `VALIDATION_ERROR` 코드가 반환되면, Form field에 에러 상태를 추가합니다.
+
+```ts
+// 전달받은 FormData를 Zod로 검증
+// 커스텀 에러 핸들링을 위해 사용 safeParse 사용
+const input = formSchema.safeParse({
+  email: formData.get("email"),
+  password: formData.get("password"),
+});
+
+if (!input.success) {
+  const { fieldErrors } = input.error.flatten();
+  return {
+    code: "VALIDATION_ERROR",
+    fieldErrors,
+  };
+}
+```
+
+#### 성공 or 실패 처리
+
+성공 시, `SUCCESS` 코드와 함께 메시지를 반환합니다. custom Hook에서 정의한대로, `SUCCESS` 코드가 반환되면, `onSuccess` 함수를 실행하고, Form을 초기화합니다.
+
+```ts
+try {
+  if (EXISTS_USER.includes(input.data.email)) {
+    return {
+      code: "EXISTS_ERROR",
+      key: "email",
+      message: "User already exists with this email.",
+    };
+  }
+
+  // object equality check
+  return {
+    code: "SUCCESS",
+    message: "Form submitted successfully!",
+  };
+} catch (error) {
+  return {
+    code: "INTERNAL_ERROR",
+    err: error,
+  };
+}
+```
+
+## 결과 확인
+
+React-Hook-Form에서 Server Actions를 사용하기 위한 모든 과정을 마쳤습니다. 이제, 아래와 같은 결과를 확인할 수 있습니다.
+
+<Video src="https://res.cloudinary.com/dkhp8gzh3/video/upload/v1715609532/portfolio/qq70ai2pbzsa1qinipqs.webm" />
+
+또한, Zod는 Server Side에서만 사용했기 때문에, Client Side의 bundle size에 영향을 주지 않습니다.
+
+<Image src={analyzeClient} alt="analyze-client" />
+<Image src={analyzeNodejs} alt="analyze-nodejs" />
+
+## Bonus: Zod 에러 메시지 커스터마이징
+
+Zod는 기본값으로 영문 에러 메시지를 반환합니다. 하지만, `ZodError` 객체를 통해 에러 메시지를 커스터마이징 할 수 있습니다.
+
+`/src/utils/zod.ts`
+
+```ts
+import { z } from "zod";
+
+export const zodErrorMap: z.ZodErrorMap = (issue, ctx) => {
+  switch (issue.code) {
+    case z.ZodIssueCode.invalid_type:
+      if (issue.received === "undefined" || issue.received === "null")
+        return { message: "필수 입력 항목입니다." };
+      if (issue.expected === "number")
+        return { message: "숫자만 입력 가능합니다." };
+      break;
+    case z.ZodIssueCode.too_small:
+      return { message: `최소 ${issue.minimum}자 이상 입력해주세요.` };
+    case z.ZodIssueCode.too_big:
+      return { message: `최대 ${issue.maximum}자까지 입력 가능합니다.` };
+    case z.ZodIssueCode.invalid_string:
+      if (issue.validation === "email")
+        return { message: "이메일 형식으로 입력해주세요." };
+      break;
+    default:
+      return { message: ctx.defaultError };
+  }
+
+  return { message: ctx.defaultError };
+};
+```
+
+이후, Zod 스키마에 `errorMap`을 추가하여 커스터마이징한 에러 메시지를 반환할 수 있습니다.
+
+`/src/app/actions.ts`
+
+```ts
+import { z } from "zod";
+import { zodErrorMap } from "@/utils/zod";
+
+const formSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+z.setErrorMap(zodErrorMap);
+```
+
+## 결론
+
+여기까지 읽어주신 분들께 감사드립니다.
+
+**저의 결론은 2안의 점진적 향상을 취하는 대신 복잡한 사용성을 갖기 보단,1안의 방법을 사용하는 것이 더 좋다고 생각합니다.** 여러 대규모 오픈소스를 참고하였으나, 대부분 1안의 방법을 사용하고 있었습니다.
+
+아직까진 ServerActions가 좋은 DX를 제공하진 않는다고 생각합니다.
+
+로딩 상태를 처리하기 위해선 `useFormStatus`를 사용해야 하며, 이는 `<form />` 요소 내에 존재해야만 합니다. 또한 성공/실패 시 클라이언트에서 trigger하기 위해선 `useEffect`를 사용해야 함이 번거롭습니다. React 공식문서의 [Effect가 필요하지 않을 수 있습니다.](https://ko.react.dev/learn/you-might-not-need-an-effect)에서 **사용자 이벤트를 처리하는 데 Effect가 필요하지 않습니다.** 라는 내용과 충돌합니다.
+
+하지만 React 19의 canary에서는, `useFormStatus` 대신 `useActionState`에 의해 `isPending`을 사용할 수 있게 하여, 로딩 상태 관리를 더 편하게 하였고, 앞으로도 더 많은 기능이 추가해 줄 것이라고 생각합니다.
+
+## 참조
+
+- [Next.js#server-actions-and-mutations](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)
+- [React Hook Form#PerformanceofReactHookForm](https://react-hook-form.com/faqs#PerformanceofReactHookForm)
+- [Github#React Hook Form#10391](https://github.com/react-hook-form/react-hook-form/issues/10391)
+- [React#you-might-not-need-an-effect](https://ko.react.dev/learn/you-might-not-need-an-effect)
+
+참조한 오픈소스 목록
+
+- [Inbox Zero](https://github.com/elie222/inbox-zero)
+- [Formbricks](https://github.com/formbricks/formbricks)
+- [Dub](https://github.com/dubinc/dub)

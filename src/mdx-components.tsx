@@ -278,5 +278,51 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         </div>
       );
     },
+    table(props) {
+      return (
+        <div className="my-6 w-full overflow-x-auto">
+          <table className="w-full border-collapse text-foreground font-sans">
+            {React.Children.toArray(props.children).filter((child) =>
+              React.isValidElement(child),
+            )}
+          </table>
+        </div>
+      );
+    },
+    thead(props) {
+      return (
+        <thead className="bg-table-header-bg">
+          {React.Children.toArray(props.children).filter((child) =>
+            React.isValidElement(child),
+          )}
+        </thead>
+      );
+    },
+    tbody(props) {
+      return (
+        <tbody>
+          {React.Children.toArray(props.children).filter((child) =>
+            React.isValidElement(child),
+          )}
+        </tbody>
+      );
+    },
+    tr(props) {
+      return (
+        <tr className="border-b border-table-border">
+          {React.Children.toArray(props.children).filter((child) =>
+            React.isValidElement(child),
+          )}
+        </tr>
+      );
+    },
+    th(props) {
+      return (
+        <th className="px-4 py-3 text-left font-semibold">{props.children}</th>
+      );
+    },
+    td(props) {
+      return <td className="px-4 py-3">{props.children}</td>;
+    },
   };
 }

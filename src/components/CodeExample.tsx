@@ -164,7 +164,6 @@ function CodeExampleHeader({
 
 export function RawHighlightedCode({
   example,
-  className,
 }: {
   example: { lang: string; code: string };
   className?: string;
@@ -174,7 +173,7 @@ export function RawHighlightedCode({
     (async () => {
       const html = await codeToHtml(example.code, {
         lang: example.lang as BundledLanguage,
-        theme: DEFAULT_THEME,
+        theme: "dark-plus",
         transformers: [
           transformerNotationHighlight(),
           transformerNotationDiff(),
@@ -184,12 +183,7 @@ export function RawHighlightedCode({
       setHtml(html.replaceAll("\n", ""));
     })();
   }, [example]);
-  return (
-    <div
-      className={clsx("overflow-x-auto", className)}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 function CodeExampleFilename({

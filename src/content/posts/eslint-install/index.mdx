@@ -1,0 +1,291 @@
+import eslint from "./eslint.png";
+import prettier from "./prettier.png";
+import prettierMaxLength from "./prettier-max-length.png";
+import vscodeExtension from "./vscode-eslint-extension.png";
+import { Image } from "@/components/Media";
+import { jsx, js } from "@/components/CodeExample";
+
+export const meta = {
+  title: "프로젝트 ESLint 설정 in VSCode",
+  description: "코드 컨벤션을 유지하기 위한 ESLint 설정 방법",
+  date: "2024-02-20",
+};
+
+> eslint v9 부터 변경된, module js 기반의 설정 방법으로 새로 작성하였습니다. - 25. 05. 05.
+
+ESLint 설정 방법에 대해 정리한 글입니다. 제가 React 프로젝트를 진행할 때 주로 사용했던 ESLint 설정 기반으로 작성되었습니다.
+
+## 정의
+
+### ESLint
+
+<Image src={eslint} alt="ESLint" />
+
+Javascript, JSX의 코드를 분석하여 **문법 오류나 안티 패턴을 찾아주거나 일괄된 코드 스타일로 작성하도록 코드 포맷**을 만들 수 있는 라이브러리 입니다. 그 중 외부에 오픈되어 있는 코딩 규칙도 사용이 가능한데 유명한 Airbnb, Google 등의 Style을 제공합니다.
+
+### Prettier
+
+<Image src={prettier} alt="Prettier" />
+
+Prettier는 코드를 읽고 다시 작성하여 코드 스타일을 일관성 있게 맞춰주는 도구입니다. ESLint와 함께 사용할 경우 코드 스타일 관련된 ESLint 규칙을 비활성화하고 Prettier에 맡기는 방식으로 사용합니다.
+
+<details>
+<summary>Prettier를 안썼는데요, 쓰게 됐습니다..</summary>
+
+#### 왜 Prettier는 다루지 않나요?
+
+Linters는 코드를 분석하여 문제점을 찾아내는 것이 주 할이고, Formatters는 코드를 정리하는 것이 주 역할입니다.
+
+Linters로 코드 작성 규칙 정리 과정은 코드 분석 및 문제점을 찾아내는 과정으로 인해 Formatters 대비 느린 속도를 보입니다. 그래서 코드작성규칙은 Prettier로 작성하길 권장하는 글을 종종 볼 수 있습니다.
+
+하지만 Prettier는 코드를 읽고 다시 작성하기에 그 과정에서 소스 코드에서 모든 스타일 정보를 버려버립니다. 그 과정에서 개발자가 원하는 스타일을 보존할 수 없게 만듭니다.
+
+가장 큰 예시로 printWidth 옵션을 들 수 있습니다. 아래 예시를 통해 오히려 시각적으로 더 읽기 어려운 코드가 되는 것을 확인할 수 있습니다.
+
+<Image src={prettierMaxLength} alt="Prettier Max Length" />
+
+### ESLint의 포매팅 규칙 deprecate
+
+`2023.12.16 추가`
+
+ESLint v8.53.0부터 포매팅 규칙을 deprecate 처리하였고, 이후 v10부터 완전히 제거할 계획을 발표했습니다.
+
+주된 이유로는 언어적 발전에 따른 구문들의 변화와 프레임워크(주로 React)의 사용이 폭발적으로 증가함에 따라 스타일 규칙을 동결해 관리하고자 했지만, 더 이상 변화들과 사용자 요구를 따라잡기 어려워졌기 때문이라고 합니다.
+
+대신 코드 형식을 관리하고자 한다면 코드 포메터인 Prettier를 사용할 것을 권장합니다.
+
+[ESLint 블로그 - Deprecating formatting rules](https://eslint.org/blog/2023/10/deprecating-formatting-rules/)
+
+</details>
+
+## 설정 방법
+
+### IDE에 ESLint 설치
+
+VSCode의 확장탭에서 ESLint ( 혹은 dbaeumer.vscode-eslint ) 를 검색하여 설치합니다.
+
+<Image src={vscodeExtension} alt="VSCode ESLint Extension" />
+
+### ESLint 패키지 설치
+
+**1. ESLint 패키지중 필요한 패키지를 설치합니다.**
+
+- eslint: ESLint의 코어 패키지
+- @eslint/eslintrc: ESLint 설정 파일을 로드하는 패키지
+- eslint-plugin-import: import / export 관련 규칙
+- eslint-plugin-jsx-a11y: JSX 요소의 접근성 관련 규칙
+- eslint-plugin-react: JSX 및 React 컴포넌트 관련 규칙
+- eslint-plugin-react-hooks: React Hooks 관련 규칙
+- typescript-eslint: TypeScript 관련 ESLint 규칙을 제공하는 패키지
+- @typescript-eslint/parser: TypeScript 코드를 분석하기 위한 parser
+- eslint-config-next: Next.js 프로젝트에서 사용하는 ESLint 설정
+- @next/eslint-plugin-next: Next.js 코드를 위한 ESLint 플러그인
+- eslint-config-prettier: ESLint와 Prettier 충돌 방지
+- eslint-plugin-prettier: Prettier를 ESLint 규칙으로 실행
+
+eslint-config-next는 Next CLI로 구성했을 경우 기본 설치되어 있으므로 아래 명령어에 포함하지 않았습니다.
+
+::: code-group
+
+```sh [npm]
+npm install --save-dev eslint @eslint/eslintrc eslint-plugin-import eslint-plugin-jsx-a11y eslint-plugin-react eslint-plugin-react-hooks @typescript-eslint/parser typescript-eslint eslint-config-prettier eslint-plugin-prettier
+```
+
+```sh [yarn]
+yarn add --dev eslint @eslint/eslintrc eslint-plugin-import eslint-plugin-jsx-a11y eslint-plugin-react eslint-plugin-react-hooks @typescript-eslint/parser typescript-eslint eslint-config-prettier eslint-plugin-prettier
+```
+
+```sh [pnpm]
+pnpm i -D eslint @eslint/eslintrc eslint-plugin-import eslint-plugin-jsx-a11y eslint-plugin-react eslint-plugin-react-hooks @typescript-eslint/parser typescript-eslint eslint-config-prettier eslint-plugin-prettier
+```
+
+:::
+
+**2. eslint.config.mjs 파일을 생성하고 아래와 같이 설정합니다.**
+
+eslint v9부터는 module js 기반 설정 방식을 권장합니다. 패키지 목록을 전부 설치했을 경우 샘플 설정입니다.
+
+```js
+// [!code filename:eslint.config.mjs]
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+import { FlatCompat } from "@eslint/eslintrc";
+import tseslintParser from "@typescript-eslint/parser";
+import eslintConfigPrettier from "eslint-config-prettier";
+import importPlugin from "eslint-plugin-import";
+import prettierPlugin from "eslint-plugin-prettier";
+import tseslint from "typescript-eslint";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+/** @type {import('eslint').Linter.Config[]} */
+export default tseslint.config(
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  eslintConfigPrettier,
+  {
+    ignores: ["dist", "node_modules"],
+    extends: [tseslint.configs.recommended], // 추천 규칙 확장
+    languageOptions: {
+      parser: tseslintParser,
+      parserOptions: {
+        projectService: true, // 프로젝트에서 가장 가까운 tsconfig.json 파일을 찾아서 사용합니다.
+        project: true, // tsconfig.json 프로젝트 설정 활성화
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
+      prettier: prettierPlugin,
+      "@import": importPlugin,
+    },
+    settings: {
+      "import/resolver": {
+        typescript: true,
+        node: true,
+      },
+    },
+    rules: {
+      "prettier/prettier": "error", // prettier 규칙 어긋나면 error
+
+      // tseslint.config 에 지정하면 에러나는 규칙
+      // -------------------------------------
+      "@typescript-eslint/consistent-type-imports": "error", // type에 대한 import 시 type 키워드 필수
+      "no-unused-vars": "off", // ts eslint에서 수행하므로, eslint 에서는 무시
+
+      // tseslint.configs.recommended를 덮어쓰기 위한 규칙
+      // -------------------------------------
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "all",
+          varsIgnorePattern: "_.*",
+          argsIgnorePattern: "_.*",
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "off", // any 타입 허용
+      "@typescript-eslint/ban-ts-comment": "off", // @ts-comment 사용 허용
+      "@typescript-eslint/no-empty-object-type": "off", // 빈 객체 타입 허용
+      // "no-undef": "off",  // ts eslint가 전역 변수/타입을 못잡을 경우 주석 제거
+
+      // import 규칙
+      // -------------------------------------
+      "@import/order": [
+        "error",
+        {
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index",
+            "object",
+            "type",
+          ],
+          pathGroups: [
+            {
+              pattern: "next/**",
+              group: "external",
+              position: "before",
+            },
+            {
+              pattern: "@turucar/**",
+              group: "external",
+              position: "after",
+            },
+            {
+              pattern: "@/**",
+              group: "internal",
+              position: "before",
+            },
+            {
+              pattern: "*.scss",
+              group: "sibling",
+              position: "after",
+            },
+          ],
+          "newlines-between": "always",
+          alphabetize: {
+            order: "asc",
+            caseInsensitive: true,
+          },
+        },
+      ],
+    },
+  },
+
+  // js
+  {
+    files: ["**/*.js", "**/*.cjs", "**/*.mjs"],
+    extends: [tseslint.configs.disableTypeChecked],
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+);
+```
+
+**3. prettier.config.js 파일을 생성합니다.**
+
+```js
+// [!code filename:prettier.config.js]
+module.exports = {
+  useTabs: false,
+  tabWidth: 2,
+  semi: true,
+  bracketSpacing: true,
+  singleQuote: false,
+  quoteProps: "as-needed",
+  jsxSingleQuote: false,
+  jsxBracketSameLine: false,
+  jsxParens: true,
+  proseWrap: "never",
+  trailingComma: "all",
+  arrowParens: "always",
+  endOfLine: "auto",
+};
+```
+
+### VSCode 설정
+
+소스코드를 내려받은 사용자가 VSCode에 ESLint를 기본 Formatter로 사용할 수 있도록 공통 설정을 추가합니다. .vscode/settings.json 파일을 생성하고 아래와 같이 설정합니다.
+
+```json
+// [!code filename:.vscode/settings.json]
+{
+  "eslint.format.enable": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "css.lint.unknownAtRules": "ignore",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "eslint.experimental.useFlatConfig": true
+}
+```
+
+```json
+// [!code filename:.vscode/extensions.json]
+{
+  "recommendations": ["dbaeumer.vscode-eslint"]
+}
+```
+
+## 결론
+
+ESLint v9부터 설정 방식이 크게 변경되었으며, 기존 JSON 형식 대신 모듈 기반의 JavaScript 설정이 권장됩니다. 이 방식은 더 유연하고 강력한 설정을 가능하게 합니다. 같이 일하는 팀원들과 코드 스타일을 통일하고 싶다면 ESLint와 Prettier를 함께 사용하는 것이 좋은 선택입니다.
+
+특히 TypeScript와 React를 사용하는 프로젝트에서는 적절한 플러그인을 추가하여 타입 안정성과 컴포넌트 작성 규칙을 강화할 수 있습니다. 여기서 소개한 설정들을 참고하여 프로젝트에 맞게 ESLint를 구성해보세요.

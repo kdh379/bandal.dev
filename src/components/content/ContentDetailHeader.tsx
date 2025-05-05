@@ -27,7 +27,7 @@ export default function ContentDetailHeader({
         className={buttonVariants({
           variant: "link",
           color: "primary",
-          className: "hover:translate-x-[-4px]",
+          className: "mb-4 hover:translate-x-[-4px]",
         })}
       >
         ← {backLink.label}

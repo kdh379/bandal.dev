@@ -1,7 +1,13 @@
 import fs from "fs";
 import path from "path";
 
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { cache } from "react";
+
+dayjs.extend(isSameOrBefore);
+dayjs.extend(customParseFormat);
 
 export type ContentType = "blog" | "note";
 
@@ -13,7 +19,6 @@ export type ContentItem = {
     description: string;
     date: string;
     published?: boolean;
-    year: number;
     type?: ContentType;
   };
 };
@@ -55,16 +60,24 @@ export function getSlugs(type: ContentType) {
 }
 
 // 연도별로 콘텐츠 그룹화하는 함수
-export function groupContentByYear<T extends { meta: { year: number } }>(
+export function groupContentByYear<T extends { meta: { date: string } }>(
   content: T[],
 ): Record<number, T[]> {
   const contentByYear: Record<number, T[]> = {};
 
-  content.forEach((item) => {
-    if (!contentByYear[item.meta.year]) {
-      contentByYear[item.meta.year] = [];
+  const sortedContent = content.sort((a, b) => {
+    const dateA = dayjs(a.meta.date);
+    const dateB = dayjs(b.meta.date);
+
+    return dateB.isBefore(dateA) ? -1 : 1;
+  });
+
+  sortedContent.forEach((item) => {
+    const year = dayjs(item.meta.date).year();
+    if (!contentByYear[year]) {
+      contentByYear[year] = [];
     }
-    contentByYear[item.meta.year].push(item);
+    contentByYear[year].push(item);
   });
 
   // 연도를 내림차순으로 정렬
@@ -89,24 +102,11 @@ export const getContentBySlug = cache(
     }
 
     try {
-      // 날짜 파싱 및 년도 추출
-      const dateObj = new Date(contentModule.meta.date);
-      const year = dateObj.getFullYear();
-
-      // 한글 날짜 형식으로 변환
-      const formattedDate = dateObj.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-
       return {
         Component: contentModule.default,
         meta: {
           slug,
           ...contentModule.meta,
-          date: formattedDate,
-          year,
           type,
         },
       };

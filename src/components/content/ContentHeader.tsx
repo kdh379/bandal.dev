@@ -10,7 +10,7 @@ export default function ContentHeader({
   description,
 }: ContentHeaderProps) {
   return (
-    <div className="mb-12">
+    <div>
       <h1
         className={cn(
           "text-4xl md:text-5xl font-bold mb-4",
