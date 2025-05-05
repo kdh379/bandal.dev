@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/Button";
@@ -50,7 +51,7 @@ function HeroSection() {
             "transition-all duration-300",
           )}
         >
-          개발, 디자인, 그리고 일상에 관한 이야기를 담은 공간입니다.
+          개발, 그리고 일상에 관한 이야기를 담은 공간이에요
         </p>
         <div className="flex flex-wrap gap-4">
           <Link
@@ -81,9 +82,15 @@ function HeroSection() {
           "animate-[fadeIn_1s_ease-in-out]",
         )}
       >
-        <div className="w-full h-80 bg-gradient-to-br flex items-center justify-center bg-[image:var(--gradient-primary)]">
+        <div className="w-full bg-gradient-to-br flex items-center justify-center bg-[image:var(--gradient-primary)]">
           <div className="text-white text-center p-8">
-            <div className="text-5xl font-bold mb-4">반달</div>
+            <Image
+              src="/avatar.png"
+              alt="BANDAL.DEV"
+              width={100}
+              height={100}
+              className="rounded-full"
+            />
             <div className="text-lg opacity-90">BANDAL.DEV</div>
           </div>
         </div>
@@ -230,15 +237,14 @@ function AboutSection() {
         소개
       </h2>
       <p className="text-lg mb-4 text-foreground">
-        이 블로그는 Next.js와 Tailwind CSS를 사용하여 만들어졌으며, MDX를 통해
-        마크다운으로 글을 작성합니다. 개발 경험과 지식을 공유하고, 새로운 기술을
-        탐구하며 배운 내용을 기록합니다.
+        이 블로그는 Next.js의 내장된 기능을 사용하여 만들어졌어요. 새로운 지식을
+        얻게되면 블로그에 기록해요.
       </p>
       <Link
         href="/about"
         className="inline-flex items-center font-medium text-primary transition hover:translate-x-1"
       >
-        더 알아보기 <span className="ml-1">→</span>
+        제가 궁금하다면 <span className="ml-1">→</span>
       </Link>
     </section>
   );

@@ -18,5 +18,6 @@
   },
   "[mdx]": {
     "editor.wordWrap": "on"
-  }
+  },
+  "tailwindCSS.classFunctions": ["tv", "clsx", "cn"]
 }

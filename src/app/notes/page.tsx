@@ -6,9 +6,11 @@ import { buttonVariants } from "@/components/ui/Button";
 import { ViewTransition } from "@/components/ViewTransition";
 import { getNotesByYear } from "@/lib/content-utils";
 
+const DESCRIPTION = "개인적인 생각과 경험을 기록합니다.";
+
 export const metadata = {
   title: "노트 - bandal.dev",
-  description: "짧은 팁과 아이디어를 공유합니다.",
+  description: DESCRIPTION,
 };
 
 export default async function NotesPage() {
@@ -24,10 +26,7 @@ export default async function NotesPage() {
     >
       <div>
         <div className="flex justify-between items-center mb-12">
-          <ContentHeader
-            title="노트"
-            description="짧은 팁과 아이디어를 공유합니다."
-          />
+          <ContentHeader title="노트" description={DESCRIPTION} />
           <Link
             href="/blog"
             className={buttonVariants({ variant: "link", color: "foreground" })}

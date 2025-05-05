@@ -12,7 +12,7 @@ const buttonVariants = tv({
     variant: {
       solid: "",
       outline: "border bg-transparent",
-      link: "underline underline-offset-4 hover:text-primary",
+      link: "underline underline-offset-4 hover:text-primary whitespace-pre-wrap break-all",
       light: "",
     },
     color: {
@@ -90,7 +90,7 @@ const buttonVariants = tv({
     // link
     {
       variant: "link",
-      className: "p-0 [&>svg]:ml-0",
+      className: "p-0 [&>svg]:ml-0.5",
     },
     // Icon Only
     {

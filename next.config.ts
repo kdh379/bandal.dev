@@ -3,7 +3,7 @@ import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  pageExtensions: ["mdx", "tsx"],
+  pageExtensions: ["mdx", "tsx", "ts"],
   redirects: async () => [
     {
       source: "/resume",

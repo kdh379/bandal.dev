@@ -41,16 +41,18 @@ export default async function NotePage({ params }: NotePageProps) {
   }
 
   return (
-    <div>
+    <>
       <ContentDetailHeader
         slug={note.meta.slug}
         title={note.meta.title}
         date={note.meta.date}
         backLink={{ href: "/notes", label: "노트로 돌아가기" }}
       />
-      <ViewTransition>
-        <note.Component />
-      </ViewTransition>
-    </div>
+      <div className="slide-enter-content">
+        <ViewTransition>
+          <note.Component />
+        </ViewTransition>
+      </div>
+    </>
   );
 }

@@ -41,17 +41,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   return (
-    <div>
+    <>
       <ContentDetailHeader
         slug={post.meta.slug}
         title={post.meta.title}
         date={post.meta.date}
         backLink={{ href: "/blog", label: "블로그로 돌아가기" }}
       />
-      <ViewTransition>
-        <post.Component />
-      </ViewTransition>
-    </div>
+      <div className="slide-enter-content">
+        <ViewTransition>
+          <post.Component />
+        </ViewTransition>
+      </div>
+    </>
   );
 }
 

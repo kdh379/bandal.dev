@@ -39,6 +39,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(note.meta.date).toISOString(),
   }));
 
+  console.log(postUrls);
+  console.log(noteUrls);
+
   // 모든 URL 결합
   return [...routes, ...postUrls, ...noteUrls];
 }

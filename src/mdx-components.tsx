@@ -60,15 +60,22 @@ function createHeading(level: 1 | 2 | 3 | 4 | 5 | 6) {
 // This file is required to use MDX in `app` directory.
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
+    wrapper(props) {
+      return <div className="slide-enter-content">{props.children}</div>;
+    },
     // Allows customizing built-in components, e.g. to add styling.
-    // h1: ({ children }) => <h1 style={{ fontSize: "100px" }}>{children}</h1>,
+    h1: ({ children }) => (
+      <h1 className="scroll-mt-24 text-4xl font-bold text-heading mb-6 tracking-tight font-serif">
+        {children}
+      </h1>
+    ),
     ...components,
 
     h2: (props) => {
       const Heading = createHeading(2);
       return (
         <Heading {...props}>
-          <span className="scroll-mt-24 text-3xl font-bold text-heading-color mt-16 mb-6 block border-b border-hr pb-2 font-serif tracking-tight">
+          <span className="scroll-mt-24 text-3xl font-bold text-heading mt-16 mb-6 block border-b border-hr pb-2 font-serif tracking-tight">
             {props.children}
           </span>
         </Heading>
@@ -78,7 +85,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       const Heading = createHeading(3);
       return (
         <Heading {...props}>
-          <span className="scroll-mt-24 text-2xl font-semibold text-heading-color mt-12 mb-4 block font-sans tracking-tight">
+          <span className="scroll-mt-24 text-2xl font-semibold text-heading mt-12 mb-4 block font-sans tracking-tight">
             {props.children}
           </span>
         </Heading>
@@ -88,7 +95,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       const Heading = createHeading(4);
       return (
         <Heading {...props}>
-          <span className="scroll-mt-24 text-xl font-semibold text-heading-color mt-10 mb-3 block font-sans tracking-tight">
+          <span className="scroll-mt-24 text-xl font-semibold text-heading mt-10 mb-3 block font-sans tracking-tight">
             {props.children}
           </span>
         </Heading>
@@ -98,7 +105,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       const Heading = createHeading(5);
       return (
         <Heading {...props}>
-          <span className="scroll-mt-24 text-lg font-semibold text-heading-color mt-8 mb-2 block font-sans tracking-tight">
+          <span className="scroll-mt-24 text-lg font-semibold text-heading mt-8 mb-2 block font-sans tracking-tight">
             {props.children}
           </span>
         </Heading>
@@ -108,7 +115,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       const Heading = createHeading(6);
       return (
         <Heading {...props}>
-          <span className="scroll-mt-24 text-base font-semibold text-heading-color mt-6 mb-2 block font-sans tracking-tight">
+          <span className="scroll-mt-24 text-base font-semibold text-heading mt-6 mb-2 block font-sans tracking-tight">
             {props.children}
           </span>
         </Heading>
@@ -141,7 +148,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     },
     blockquote(props) {
       return (
-        <blockquote className="border-l-4 border-blockquote-border pl-4 py-2 my-6 text-blockquote bg-blockquote/5 rounded-md font-serif italic">
+        <blockquote className="border-l-4 border-blockquote-border pl-4 py-2 my-6 text-blockquote bg-blockquote/5 rounded-md">
           {props.children}
         </blockquote>
       );
@@ -224,6 +231,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     code({ children }: { children: string | ReactNode }) {
+      // 문자열이 아닌 경우
       if (typeof children !== "string") {
         return (
           <code className="px-1 py-0.5 rounded bg-code-background text-code-color text-[15px] font-mono">
@@ -231,6 +239,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           </code>
         );
       }
+      // 태그가 있는 경우
       if (children.startsWith("<")) {
         return (
           <code className="px-1 py-0.5 rounded bg-code-background text-code-color text-[15px] font-mono">
@@ -238,6 +247,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           </code>
         );
       }
+      // 태그가 없는 경우
       return (
         <code className="px-1 py-0.5 rounded bg-code-background text-code-color text-[15px] font-mono">
           {children
