@@ -2,7 +2,6 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 
 import { FlatCompat } from "@eslint/eslintrc";
-import tseslintParser from "@typescript-eslint/parser";
 import eslintConfigPrettier from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
 import prettierPlugin from "eslint-plugin-prettier";
@@ -17,13 +16,18 @@ const compat = new FlatCompat({
 
 /** @type {import('eslint').Linter.Config[]} */
 export default tseslint.config(
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  // Next.js 설정 (core-web-vitals만 사용하여 TypeScript 플러그인 충돌 방지)
+  ...compat.extends("next/core-web-vitals"),
+
+  // Prettier 설정
   eslintConfigPrettier,
+
+  // TypeScript ESLint 추천 설정
+  ...tseslint.configs.recommended,
+
   {
     ignores: ["dist", "node_modules"],
-    extends: [tseslint.configs.recommended], // 추천 규칙 확장
     languageOptions: {
-      parser: tseslintParser,
       parserOptions: {
         projectService: true, // 프로젝트에서 가장 가까운 tsconfig.json 파일을 찾아서 사용합니다.
         project: true, // tsconfig.json 프로젝트 설정 활성화
@@ -33,7 +37,6 @@ export default tseslint.config(
       },
     },
     plugins: {
-      "@typescript-eslint": tseslint.plugin,
       prettier: prettierPlugin,
       "@import": importPlugin,
     },
@@ -46,7 +49,7 @@ export default tseslint.config(
     rules: {
       "prettier/prettier": "error", // prettier 규칙 어긋나면 error
 
-      // tseslint.config 에 지정하면 에러나는 규칙
+      // TypeScript ESLint 규칙
       // -------------------------------------
       "@typescript-eslint/consistent-type-imports": "error", // type에 대한 import 시 type 키워드 필수
       "no-unused-vars": "off", // ts eslint에서 수행하므로, eslint 에서는 무시
@@ -117,13 +120,10 @@ export default tseslint.config(
     },
   },
 
-  // js
+  // JavaScript 파일용 설정 (TypeScript 체크 비활성화)
   {
     files: ["**/*.js", "**/*.cjs", "**/*.mjs"],
-    extends: [tseslint.configs.disableTypeChecked],
-    plugins: {
-      "@typescript-eslint": tseslint.plugin,
-    },
+    ...tseslint.configs.disableTypeChecked,
     rules: {
       "@typescript-eslint/no-require-imports": "off",
     },
