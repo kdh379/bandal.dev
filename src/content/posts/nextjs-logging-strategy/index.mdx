@@ -1,0 +1,551 @@
+import { Image } from "@/components/Media";
+import aiQuestion from "./perplexity-rsc-logging-question.png";
+
+export const meta = {
+  title: "Next.js에서 효율적인 로깅 구조 만들기",
+  description:
+    "서버 사이드와 클라이언트 사이드를 아우르는 효율적인 로깅 전략과 구현 방법을 알아봅니다.",
+  date: "2025-06-13",
+};
+
+프로젝트를 운영하다 보면 사용자가 어떻게 행동하는지, 어떤 에러가 발생하는지 확인해야 할 필요가 있어요. 이를 파악하기 위해 로그 데이터를 분석해야 하는데, 로그를 남기는 것을 **로깅(Logging)** 이라고 해요.
+
+로깅을 통해 기록된 데이터로 다음과 같은 정보를 확인할 수 있어요
+
+- 사용자의 행동 패턴 추적
+- 에러 발생 상황 파악
+- 성능 병목 지점 발견
+- A/B 테스트 결과 분석
+
+이번 글에서는 Next.js 환경에서 **자동화된 로깅 시스템**을 구축하여 개발자가 비즈니스 로직에 집중할 수 있도록 하는 방법을 소개합니다.
+
+## 기존 로깅 방식의 문제점
+
+효율적인 로깅 구조가 없었을 땐 중요한 로직마다 수동으로 로깅 코드를 추가해야 했어요.
+
+```typescript
+async function createReservation(formData: FormSchema) {
+  try {
+    logger("예약 등록 API 호출 시작");
+    const response = await fetch(`/api/reservation/${productId}`, {
+      method: "POST",
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      logger(`API 호출 실패: ${response.status}`);
+      throw new Error("Create Reservation API fetch failed");
+    }
+
+    const reservationData = await response.json();
+    logger("예약 등록 성공:", reservationData.id);
+    return reservationData;
+  } catch (error) {
+    logger("예약 등록 중 에러 발생:", error.message);
+    throw error;
+  }
+}
+```
+
+### 이런 방식의 문제점
+
+**1. 코드 가독성 저하**
+
+- 비즈니스 로직과 로깅 로직이 뒤섞여 있어요
+- 실제 중요한 로직을 파악하기 어려워요
+
+**2. 일관성 부족**
+
+- 개발자마다 다른 로깅 형식을 사용해요
+- 로그 분석 시 혼란을 야기해요
+
+**3. 누락 가능성**
+
+- 수동으로 로그를 추가하다 보면 빠뜨리기 쉬워요
+- 중요한 에러 상황을 놓칠 수 있어요
+
+**4. 유지보수 어려움**
+
+- 로깅 형식 변경 시 모든 코드를 수정해야 해요
+- 확장성이 떨어져요
+
+**5. 분산된 관리**
+
+- 클라이언트와 서버 로그가 따로 관리되어요
+- 통합적인 분석이 어려워요
+
+### 자동화된 로깅의 장점
+
+이런 문제들을 해결하기 위해 **자동화된 로깅 시스템**을 구축하면:
+
+- ✅ **깔끔한 코드**: 비즈니스 로직에만 집중할 수 있어요
+- ✅ **일관된 형식**: 통일된 로그 구조로 분석이 쉬워요
+- ✅ **누락 방지**: 중요한 이벤트를 자동으로 캡처해요
+- ✅ **통합 관리**: 서버와 클라이언트 로그를 한 곳에서 관리해요
+
+## Next.js의 복잡한 실행 환경 이해하기
+
+Next.js App Router는 여러 실행 환경에서 코드가 동작해요. 각 환경은 독립적으로 실행되기 때문에 환경별로 다른 로깅 전략이 필요해요.
+
+### 주요 실행 환경
+
+**🌐 Client Component (브라우저)**
+
+- 사용자의 브라우저에서 실행
+- JavaScript 런타임 에러, 네트워크 에러 발생 가능
+- `window` 객체 접근 가능
+
+**🖥️ Server Component (서버)**
+
+- Next.js 서버에서 실행
+- 데이터베이스 연결 에러, API 호출 에러 발생 가능
+- Node.js 환경에서 동작
+
+**🚪 Middleware (진입점)**
+
+- 모든 요청의 최상위에서 실행
+- 인증, 리다이렉션 로직에서 에러 발생 가능
+- Edge Runtime에서 동작
+
+**❌ Error Pages (에러 처리)**
+
+- `error.tsx`, `not-found.tsx`에서 실행
+- 예상치 못한 에러나 404 상황 처리
+
+### 환경별 로깅 전략이 필요한 이유
+
+각 환경은 서로 다른 특성을 가지고 있어요:
+
+| 환경        | 특징              | 주요 에러 유형               |
+| ----------- | ----------------- | ---------------------------- |
+| Client      | 브라우저 API 사용 | 네트워크 에러, 런타임 에러   |
+| Server      | Node.js API 사용  | 서버 에러, 데이터베이스 에러 |
+| Middleware  | 제한된 API        | 인증 에러, 리다이렉션 에러   |
+| Error Pages | 에러 복구         | 예상치 못한 에러             |
+
+## 단계별 로깅 시스템 구축하기
+
+이제 실제로 Next.js에서 자동화된 로깅 시스템을 구축합니다.
+
+### 1단계: 기본 로거 함수 만들기
+
+먼저 통일된 로그 형식을 위한 기본 로거 함수를 만들어요. 로그 수집 함수는 `"use server"`를 명시해서 서버 액션으로 수행하도록 해요.
+
+서버 액션은 어느 환경에서든 호출할 수 있고 여러 보안적 이점을 갖고 있어요. 로그에 민감 정보를 잘못 남겨서 보안 사고가 발생할 수도 있기 때문에 서버 액션을 사용했어요. 자세한 내용은 이전에 작성한 [React Hook Form에서 Next.js Server Actions 사용하기](/blog/react-hook-form-with-server-action)에서 확인할 수 있어요.
+
+```typescript
+// [!code filename:lib/logger.ts]
+"use server";
+
+type EventType = "runtime_error" | "api_error" | "network_error" | "user_action";
+
+interface LogData {
+  eventType: EventType;
+  message: string;
+  ...
+}
+
+export function logger(logData: LogData) {
+  // 이벤트 타입에 따른 로그 레벨 결정
+  const level = getLogLevelFromEventType(eventType);
+  // 현재 설정된 로그 레벨 기준으로 필터링
+  if (!isLevelEnabled(level)) {
+    return;
+  }
+
+  /**
+   * 로그 전달 혹은 console.log 출력
+   *
+   * 서버 액션으로 수행하기 때문에, console.log로 남기더라도 서버의 터미널에 남게되고,
+   * AWS를 사용한다면 CloudWatch Logs에 남게되어 쉽게 확인할 수 있어요.
+  */
+}
+```
+
+### 2단계: 클라이언트 에러 자동 수집
+
+브라우저에서 발생하는 에러를 자동으로 수집하는 컴포넌트를 만들어요.
+
+- 브라우저에서 발생하는 런타임 에러는 모두 `window.onerror` 및 `window.onunhandledrejection`로 전파돼요.
+- 이 원리를 이용해서 하나의 컴포넌트에서 모든 런타임 에러를 캡처할 수 있어요.
+
+```tsx
+// [!code filename:components/RuntimeLogger.tsx]
+"use client";
+
+import { useEffect } from "react";
+import { logger } from "./logger";
+
+function setupRuntimeErrorHandlers() {
+  if (typeof window !== "undefined") {
+    // Reference Error, Type Error 등 런타임 에러 캡처
+    window.onerror = (message, source, _lineno, _colno, error) => {
+      // error 객체에는 다음 정보들이 포함됩니다:
+      // - error.name: "ReferenceError" | "TypeError" 등
+      // - error.message: "aaa is not defined" 등
+      // - error.stack: 에러 발생 위치의 스택 트레이스
+
+      logger({
+        eventType: "runtime_error",
+        message: message.toString(),
+        error: {
+          name: error?.name,
+          message: error?.message,
+          stack: error?.stack,
+          source: source,
+        },
+        userAgent: getBrowserInfo(),
+      });
+    };
+
+    // async/await나 Promise에서 발생하는 에러 캡처
+    window.onunhandledrejection = (event) => {
+      const error = event.reason;
+
+      logger({
+        eventType: "runtime_error",
+        message: error?.message,
+        error: {
+          name: error?.name,
+          message: error?.message,
+          stack: error?.stack,
+        },
+        userAgent: getBrowserInfo(),
+      });
+    };
+  }
+}
+
+function RuntimeLogger() {
+  useEffect(() => {
+    setupRuntimeErrorHandlers();
+  }, []);
+
+  return null;
+}
+```
+
+만든 RuntimeLogger를 앱 전체에 적용해요.
+
+```tsx
+// app/layout.tsx
+import { RuntimeLogger } from "@/components/RuntimeLogger";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="ko">
+      <body>
+        <RuntimeLogger />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+### 3단계: Server Components 에러 자동 수집
+
+아래 이슈에서 힌트를 얻었어요
+
+- [vercel/next.js#54719](https://github.com/vercel/next.js/discussions/54719)
+
+Next.JS는 서버 사이드에서 에러가 발생하면 error.tsx로 fallback되어요. 이때 별도의 로깅을 남기고자 하여도, 빌드 환경에선 로깅을 수행할 수 없어요. error.tsx에서 `error.message`를 보면, 아래 에러 메시지를 보게 돼요.
+
+> [!danger]
+>
+> An error occurend in the Server Component render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additionnal details about the nature of the error. Error digest : XXXXXXXXXXXXX
+
+이 메시지를 보면, 빌드 환경에선 에러 메시지가 숨겨져 있어요. 이를 해결하기 위해 공식문서에서 제공하는 `instrumentation.ts`를 사용해요.
+
+- [공식문서](https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation#onrequesterror-optional)
+
+> [!info]
+>
+> instrumentation.ts는 최근까지 `experimental` 상태였지만, 현재 v15.3 기준 정식 기능이 되어있어요. 아직까지 AI에 질문하거나 구글링하여도 Server Components의 에러를 공통화할 수 없고, 에러가 발생할 수 있는 지점마다 로깅 함수를 호출하거나 Sentry를 보내라고 답변해요.
+
+<Image src={aiQuestion} alt="AI 질문 예시" />
+
+**하지만 아래 방법으로 로깅을 공통화할 수 있어요.**
+
+```ts
+// [!code filename:src/instrumentation.ts]
+import { type Instrumentation } from "next";
+
+export const onRequestError: Instrumentation.onRequestError = async (
+  err,
+  request,
+  context,
+) => {
+  // 헤더 정규화
+  const normalizedHeaders: Record<string, string> = {};
+  for (const [key, value] of Object.entries(request.headers)) {
+    if (typeof value === "string") {
+      normalizedHeaders[key] = value;
+    } else if (Array.isArray(value)) {
+      normalizedHeaders[key] = value.join(", ");
+    } else if (value !== undefined) {
+      normalizedHeaders[key] = String(value);
+    }
+  }
+
+  logger({
+    eventType: "server_error",
+    message: err instanceof Error ? err.message : "Unknown error",
+  });
+};
+```
+
+각 Parameter별로 아래 정보를 담고있어요.
+
+- `err`: `Error` 객체
+- `request`:
+  - path: 현재 페이지 경로
+  - method: GET
+  - headers: next/headers 정보
+    - onRequestError로 콜백된 실행 컨텍스트 내에선 next/headers 를 호출해도 빈 값이 나와요. 대신 request.headers를 사용할 수 있어요.
+- `context`:
+  - routerKind: 라우터 종류 (`"App Router"` | `"Page Router"`)
+  - routePath: 현재 페이지 경로인데, dynamic route일 경우 `"/reserve/[id]"` 처럼 표현되어요.
+  - routeType: `"render"` (아직 무엇이 더 존재하는지 확인 못했어요..)
+  - renderSource: `"react-server-components"`
+
+### 4단계: API 호출 로깅
+
+API 호출 시 로깅은 각 fetch 함수 호출부에서 수행해요.
+
+- 에러가 발생할 경우, RSC, CSC는 `throw`를 통해 공통 에러 처리 영역으로 전파할 수 있지만, Server Action 에서 발생한 에러는 `throw`를 권장하지 않아요. [공식문서](https://nextjs.org/docs/app/getting-started/error-handling#server-functions)
+- 기본 형식 외 추가적인 메타 데이터를 담기 위해, 공통 fetch 함수를 만들어요.
+
+```typescript
+// lib/api-client.ts
+import { logger } from "./logger";
+
+export async function apiClient<T>(
+  url: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+    const duration = Date.now() - startTime;
+
+    if (!response.ok) {
+      // API 에러 로깅
+      logger({
+        eventType: "api_error",
+        message: `API request failed: ${response.status} ${response.statusText}`,
+        // ... API 요청/응답 데이터
+      });
+
+      return {
+        // ...가공된 에러 객체
+      };
+    }
+
+    // 성공시 로깅
+    logger({
+      eventType: "fetch",
+      message: "fetch success",
+      // ... API 요청/응답 데이터
+    });
+
+    return response.json();
+  } catch (error) {
+    // 네트워크 에러 로깅
+    if (error instanceof TypeError) {
+      logger({
+        level: "error",
+        eventType: "network_error",
+      });
+    }
+
+    throw error;
+  }
+}
+```
+
+#### 사용 예시
+
+이제 깔끔한 코드로 API를 호출할 수 있어요:
+
+```typescript
+// 기존 방식 (로깅 코드가 섞여있음)
+async function createReservationOld(formData: FormSchema) {
+  try {
+    console.log("예약 등록 API 호출 시작");
+    const response = await fetch("/api/reservation", {
+      method: "POST",
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      console.error(`API 호출 실패: ${response.status}`);
+      throw new Error("API failed");
+    }
+
+    console.log("예약 등록 성공");
+    return response.json();
+  } catch (error) {
+    console.error("에러 발생:", error);
+    throw error;
+  }
+}
+
+// 개선된 방식 (비즈니스 로직만 남음)
+async function createReservation(formData: FormSchema) {
+  return apiClient("/api/reservation", {
+    method: "POST",
+    body: JSON.stringify(formData),
+  });
+}
+```
+
+### 5단계: Error pages 처리
+
+참조: [Next.js Learn Chapter 13 - Handling Errors](https://nextjs.org/learn/dashboard-app/error-handling)
+
+error.tsx와 not-found는 각 고유 역할별로 에러를 처리해요.
+
+#### error.tsx
+
+이미 클라이언트 사이드 에러는 로깅을 처리했기 때문에, 이곳에선 별도의 로깅을 처리하지 않아요.  
+서버 사이드 에러는 production 환경에서 전파된 경우, 데이터가 숨겨지기 때문에 로깅할 수 없어요.
+
+- 클라이언트 사이드 에러: `window.onerror`, `window.onunhandledrejection`로 처리
+- 서버 사이드 에러: instrumentation.ts에서 `onRequestError`로 처리
+
+> [!info]
+>
+> 배포된 환경에선 서버 사이드에서 throw된 에러는 error.tsx에서 `error.message`를 참조하면 "An error occurred in the Server Components render." 라는 메시지를 볼 수 있어요.  
+> Next.JS는 내부적으로 서버에서 민감 정보가 클라이언트로 유출되는 것을 방지하기 위해 메시지를 일부로 제한해요. 그렇기 때문에 error.tsx에 도달하기 전에 로깅을 수행해야 해요.
+
+#### not-found.tsx
+
+not-found.tsx는 404 에러를 처리해요.
+
+만약, Programmatic Navigation을 통해 404 에러를 발생시킨거라면, 이 페이지에서 로그를 수집할 수 있어요.
+
+```tsx
+// [!code filename:app/not-found.tsx]
+"use client";
+
+export default function NotFound() {
+  // 사용자가 주소창에 막 입력해서 들어온 경우
+  const isDirectAccess = typeof window !== "undefined" && !document.referrer;
+
+  useEffect(() => {
+    if (isDirectAccess) return;
+
+    logger({
+      eventType: "not_found",
+      message: "Page not found",
+    });
+  }, [isProgrammaticNavigation]);
+
+  return <div>404 - Page Not Found</div>;
+}
+```
+
+### 6단계: middleware.ts 에러 처리
+
+middleware는:
+
+- 기본적으로 **Edge Runtime**에서 실행돼요.
+- 이는 `layout.js` 보다 더 상위 레벨로, 사용할 수 있는 API도 제한되어 있어요. [참조](https://nextjs.org/docs/app/api-reference/edge#reference)
+
+middleware에서는 공통 처리가 불가능해서, 위 [5단계: Error pages 처리](#5-error-pages-)처럼 별도의 `logger`함수를 추가해야해요.
+
+```ts
+// [!code filename:src/middleware.ts]
+import { NextResponse } from "next/server";
+
+export function middleware(request: Request) {
+  const response = NextResponse.next();
+
+  // 리프래시 토큰 갱신 로직
+  try {
+    const tokenResponse: NextResponse = await handleTokenRefresh(request);
+
+    return tokenResponse;
+  } catch (error) {
+    logger({
+      eventType: "middleware_error",
+      message: "Failed to refresh token",
+      error: error,
+    });
+  }
+
+  return response;
+}
+```
+
+## 로그 분석을 위한 쿼리 예시
+
+구축한 로깅 시스템의 데이터를 효과적으로 분석하기 위한 쿼리들을 소개해요. 이 예시들은 AWS CloudWatch Logs Insights를 기준으로 작성되었지만, 다른 로깅 서비스에서도 비슷하게 활용할 수 있어요.
+
+### 기본 분석 쿼리
+
+```sql
+-- 전체 로그 조회
+fields @timestamp, @message
+| filter not isempty(timestamp)
+| display timestamp, level, eventType, message, page.path
+| sort timestamp desc
+| limit 1000
+
+-- 에러 로그만 조회
+fields @timestamp, @message
+| filter level = "error"
+| display timestamp, eventType, message, error.name, error.message
+| sort @timestamp desc
+| limit 500
+
+-- API 에러 분석
+fields @timestamp, @message
+| filter eventType = "api_error"
+| display timestamp, data.url, data.method, data.statusCode, message
+| sort @timestamp desc
+| limit 200
+```
+
+### 성능 분석 쿼리
+
+```sql
+-- HTTP 상태 코드별 요청 분석
+fields @timestamp, @message
+| filter data.statusCode >= 400
+| stats count(*) as errorCount by data.statusCode, data.url, data.method
+| sort errorCount desc
+| limit 20
+
+-- 시간대별 에러 발생 추이
+fields @timestamp, @message
+| filter level = "error"
+| stats count(*) as errorCount by bin(1h)
+| sort @timestamp asc
+
+-- 페이지별 에러 발생 빈도
+fields @timestamp, @message
+| filter level = "error"
+| stats count(*) as errorCount by page.path
+| sort errorCount desc
+| limit 20
+```
+
+## 결과
+
+위 방식으로 Next.JS에서 효율적인 로깅 시스템을 구축할 수 있었어요. 비즈니스 로직 사이사이 끼워져있던 로깅 함수를 모두 거둬냈고, 로깅을 실수로 추가하기 못해 발생하는 문제도 없어졌어요. 이제 개발자들은 더 이상 로깅 코드를 추가하는 것을 걱정하지 않아도 되고, 비즈니스 로직에만 집중할 수 있게 되었어요.
+
+최종적으로 중요한건 어디서 공통으로 처리가 가능할지 고려하는거였어요. Next.JS는 다양한 실행 환경을 가지고 있어서 환경별로 어떻게 처리할 수 있을지를 가장 많이 고민했어요. 이 부분을 잘 고려하면 코드 가독성과 유지보수성을 높일 수 있어요.
