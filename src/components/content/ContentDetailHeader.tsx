@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 type ContentDetailHeaderProps = {
   slug: string;
   title: string;
+  description: string;
   date: string;
   backLink: {
     href: string;
@@ -17,6 +18,7 @@ type ContentDetailHeaderProps = {
 export default function ContentDetailHeader({
   slug,
   title,
+  description,
   date,
   backLink,
 }: ContentDetailHeaderProps) {
@@ -41,6 +43,9 @@ export default function ContentDetailHeader({
         >
           {title}
         </h1>
+      </ViewTransition>
+      <ViewTransition name={`description-${slug}`}>
+        <p className="text-base text-blockquote mb-4 ">{description}</p>
       </ViewTransition>
       <ViewTransition name={`date-${slug}`}>
         <time className="text-base text-blockquote">{date}</time>

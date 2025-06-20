@@ -45,6 +45,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <ContentDetailHeader
         slug={post.meta.slug}
         title={post.meta.title}
+        description={post.meta.description}
         date={post.meta.date}
         backLink={{ href: "/blog", label: "블로그로 돌아가기" }}
       />

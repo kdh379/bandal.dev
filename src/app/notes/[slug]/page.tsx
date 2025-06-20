@@ -45,6 +45,7 @@ export default async function NotePage({ params }: NotePageProps) {
       <ContentDetailHeader
         slug={note.meta.slug}
         title={note.meta.title}
+        description={note.meta.description}
         date={note.meta.date}
         backLink={{ href: "/notes", label: "노트로 돌아가기" }}
       />
