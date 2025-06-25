@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import { Noto_Sans_KR, Noto_Serif_KR, JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 
@@ -57,6 +58,7 @@ export default function RootLayout({
             {children}
           </main>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
