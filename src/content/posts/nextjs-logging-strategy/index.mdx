@@ -78,10 +78,10 @@ async function createReservation(formData: FormSchema) {
 
 이런 문제들을 해결하기 위해 **자동화된 로깅 시스템**을 구축하면:
 
-- ✅ **깔끔한 코드**: 비즈니스 로직에만 집중할 수 있어요
-- ✅ **일관된 형식**: 통일된 로그 구조로 분석이 쉬워요
-- ✅ **누락 방지**: 중요한 이벤트를 자동으로 캡처해요
-- ✅ **통합 관리**: 서버와 클라이언트 로그를 한 곳에서 관리해요
+- **깔끔한 코드**: 비즈니스 로직에만 집중할 수 있어요
+- **일관된 형식**: 통일된 로그 구조로 분석이 쉬워요
+- **누락 방지**: 중요한 이벤트를 자동으로 캡처해요
+- **통합 관리**: 서버와 클라이언트 로그를 한 곳에서 관리해요
 
 ## Next.js의 복잡한 실행 환경 이해하기
 
@@ -89,28 +89,30 @@ Next.js App Router는 여러 실행 환경에서 코드가 동작해요. 각 환
 
 ### 주요 실행 환경
 
-**🌐 Client Component (브라우저)**
+**Client Component**
 
 - 사용자의 브라우저에서 실행
 - JavaScript 런타임 에러, 네트워크 에러 발생 가능
 - `window` 객체 접근 가능
 
-**🖥️ Server Component (서버)**
+**Server Component**
 
 - Next.js 서버에서 실행
 - 데이터베이스 연결 에러, API 호출 에러 발생 가능
 - Node.js 환경에서 동작
 
-**🚪 Middleware (진입점)**
+**Middleware - Edge Runtime**
 
-- 모든 요청의 최상위에서 실행
+- Edge Runtime에서 실행
+- 모든 요청의 최상위에서 동작
+- Server Action은 항상 middleware를 거친 다음 수행
 - 인증, 리다이렉션 로직에서 에러 발생 가능
-- Edge Runtime에서 동작
 
-**❌ Error Pages (에러 처리)**
+**Error Pages**
 
-- `error.tsx`, `not-found.tsx`에서 실행
+- `error.tsx`, `not-found.tsx`
 - 예상치 못한 에러나 404 상황 처리
+- Next.js 내부에서 핸들링
 
 ### 환경별 로깅 전략이 필요한 이유
 
