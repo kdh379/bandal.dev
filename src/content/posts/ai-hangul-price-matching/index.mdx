@@ -1,304 +1,67 @@
 import { Image } from "@/components/Media";
 import resultPage from "./result-photo.png";
 import testResult from "./test-result.png";
+import pricePlanList from "./price-plan-list.png";
+import claudeStep1 from "./claude-step1.png";
+import claudeStep2 from "./claude-step2.png";
+import claudeStep2Artifact from "./claude-step2-artifact.png";
+import claudeStep2Code from "./claude-step2-code.png";
+import claudeStep2Code2 from "./claude-step2-code2.png";
+import xlsxToObject from "./xlsx-to-object.png";
+// import claudeStep3 from "./claude-step3.png";
+// import claudeStep4 from "./claude-step4.png";
 
 export const meta = {
-  title: "AI 주도 개발로 하루 만에 추천 요금제 기능 구현하기",
+  title: "AI 주도 개발로 하루 만에 한글 퍼지 매칭 알고리즘 구현하기",
   description:
     "급박한 요구사항을 AI와 함께 단계별로 해결해나가며, 복잡한 한글 매칭 알고리즘을 빠르게 구현한 실전 경험을 공유합니다.",
   date: "2025-06-20",
 };
 
-프로젝트를 운영하다 보면 예상치 못한 급박한 요구사항이 생기곤 해요. 특히 사용자 경험과 직결되는 기능일수록 빠른 대응이 필요하죠.
+새로운 회사에 합류한지 어느새 1년이 흘렀고, 새롭게 맡은 프로젝트를 모두 개발하여 드디어 출시하게 되었습니다.
 
-이번 글에서는 **렌트카 관련 플랫폼**에서 **예약률 개선을 위한 요금제 추천 기능을 AI와 함께 단기간에 구현한 사례**를 공유합니다. 요구사항은 단순해 보였지만, 실제로는 **복잡한 한글 문자열 매칭 로직**이 필요했고, 이를 AI의 도움으로 해결한 과정을 자세히 설명합니다.
+이 시스템은 여러 렌트카 업체가 소유한 차량과 자체적으로 책정한 렌트 요금으로 하나의 플랫폼에 모아, 서비스사가 여기에 연결해 카셰어링 서비스를 할 수 있도록 하는 것입니다.
 
-## 문제 정의
+하지만 서비스 오픈 직후 일부 차량의 가격이 사용자의 기대보다 높게 책정되어 실제 예약 전환율이 다소 떨어진다는 이슈가 발생했습니다. 이에 오늘내에 차량 모델별 추천 가격을 자동으로 제안하는 기능을 구현해야 한다는 요청이 들어오게 되었습니다.
+그리고, Cursor claude Agent를 활용하여 성공적으로 하루만에 추천 요금 표시 기능을 성공적으로 구현해내었습니다.
 
-### 비즈니스 문제
+해당 글은 해당 구현 과정에 대해 공유합니다.
 
-플랫폼 내 일부 차량의 요금이 **사용자 기대 대비 높게 설정**되는 경향이 있어 실제 예약 전환율에 영향을 주고 있었어요. 이에 따라 차량 모델에 맞는 **추천 가격 정보를 자동으로 제안**해주는 기능이 요청되었어요.
+### 현재 상황부터 파악하기
 
-### 기술적 제약사항
+먼저 해당 상황에 대한 도메인 지식부터 파악하는게 중요하다 생각했습니다. 실제 운영중인 사이트에 접근하여 요금제가 어떻게 구성되어있는지 파악해봤습니다.
 
-**시간 제약**
+<Image src={pricePlanList} alt="pricePlanList" width={200} />
 
-- 구현 기한: **단 하루**
-- 빠른 프로토타입 필요
+사용자 행동을 분석한 결과, 렌트카 업체들은 요금제명을 차량 모델명으로 작성하는 경향이 있습니다. 요금제 등록 폼에는 `이름`과 `가격`만 입력할 수 있으며, 상품 등록 시 차량 모델을 지정하면서 차량 모델명과 동일한 요금제명을 가져오는 방식으로 사용중이였습니다.
 
-**시스템 제약**
+이러한 상황에서 가장 큰 문제는 사용자가 입력하는 요금제명과 차량 모델별 데이터를 어떻게 매칭할 것인가입니다. 예를 들어, 사용자가 `"뉴 K5(DL3) LPi(24년식)"` 이라고 입력했을 때, 이를 `"K5"`라는 차량 모델의 데이터와 어떻게 연결할 것인기 고민해야 합니다.
 
-- 프론트엔드에서만 구현 가능
-- 추천 데이터는 JSON으로 클라이언트에서 관리
-- 빠른 개발을 위해 DB 연동 불가
-
-**사용자 행동 분석 결과**
-
-- 렌트카 업체들은 요금제명을 **차량 모델명**으로 작성
-- 요금제 등록 폼은 **이름과 가격**만 입력
-- 상품 등록 시 차량 모델을 지정하면서 요금제명을 가져옴
-
-### 핵심 도전 과제
-
-사용자가 입력하는 요금제명과 차량 모델명별 데이터를 매칭하는 것이 가장 큰 문제였어요:
-
-```plaintext
-사용자 입력: "뉴 K5(DL3) LPi(24년식)"
-차량 모델명: "K5"
-```
-
-**다양한 입력 패턴**
-
-- 브랜드명 포함: "현대 아반떼", "기아 K5"
-- 세대 정보: "(DL3)", "(24년식)"
-- 연료 타입: "LPi", "가솔린", "하이브리드"
-- 발음 기반 입력: "아반때", "그렌져"
-- 초성 입력: "ㅅㄴㅌ" (쏘나타)
-
-## AI와 함께 단계별 문제 해결
-
-급박한 상황에서 AI를 활용해 체계적으로 접근했어요. 각 단계별로 구체적인 질문을 통해 실용적인 해결책을 얻었습니다.
+입력패턴도 다양했습니다. 브랜드명을 포함한 입력, 세대 정보, 연료 타입, 발음 기반 입력 (e.g.: 아반떼, 쏘나타, 그렌져) 등 여러 형태로 입력될 수 있습니다. 이런 다양한 입력 패턴에서 데이터를 정확하게 매칭하는 것이 이번 기능 구현의 핵심 과제였습니다.
 
 ### 1단계: 전체 구현 방안 설계
 
-**AI에게 던진 질문**
+<Image src={claudeStep1} alt="claudeStep1" />
 
-```plaintext
-기능 구현을 위한 방안 추천해줘.
+첫 질문으로 얻은 핵심 정보는 다단계 매칭 전략이였습니다.
 
-프로젝트 성격
-- 미들웨어형 프로젝트
-- 업체 - 미들웨어 - 고객 간 상품을 연결하여 업체는 자유롭게 상품을 등록, 고객은 구매하는 구조
+사용자가 입력한 요금제명을 기반으로 차량 모델명을 매칭하는 함수 구현을 제안받았고, 아래 기능 구현을 제시하였습니다.
 
-요구사항
-- 업체가 상품을 등록할 때, 상품명을 입력하면 JSON 구조의 상품별 추천가격을 가져와서 표시해주기
+1. 완전 일치로 먼저 매칭
+2. 정규화 후 일치로 매칭
+3. 유사도 기반 매칭
+4. 키워드 기반 매칭
 
-핵심 질문사항
-- 사용자가 상품명을 어떤 방식으로 입력할 지 명확하지 않을 때 JSON의 데이터 매칭시킬 방법
-- e.g.
-  - 고객이 입력한 케이스: **뉴 K5(DL3) LPi(24년식)**
-  - json내 데이터: K5 : { ... }
-```
+이를 기반으로 구체적인 매칭 알고리즘을 제안했습니다. 키워드를 추출하고 가중치를 부여하는 방식과 유사도를 측정하는 방식을 포함하고 있었습니다.
+시스템 아키텍처 측면에서 DB 연결 + API 구현 및 캐싱 로직을 제안하였지만, 1일이라는 짧은 구현 기간에는 불가능한 부분이었습니다. 그러나 매칭 전략과 알고리즘은 이번 구현 과제의 핵심 아이디어로 자리잡았습니다.
 
-**AI의 답변에서 얻은 핵심 인사이트**
+### 2단계: 한글 퍼지 매칭 구현하기
 
-**다단계 매칭 전략**
+<Image src={claudeStep2} alt="claudeStep2" />
+<br/>
+<Image src={claudeStep2Artifact} alt="claudeStep2Artifact" />
 
-```plaintext
-1차: 완전 일치 (Exact Match)
-2차: 정규화 후 일치 (Normalized Match)
-3차: 유사도 기반 매칭 (Similarity Match)
-4차: 키워드 기반 매칭 (Keyword Match)
-```
-
-**상품명 정규화 로직**
-
-```javascript
-function normalizeProductName(input) {
-  return input
-    .replace(/\([^)]*\)/g, "") // 괄호 내용 제거: (DL3), (24년식)
-    .replace(/\s+/g, " ") // 다중 공백을 단일 공백으로
-    .replace(/뉴\s*/g, "") // '뉴' 키워드 제거
-    .replace(/년식/g, "") // '년식' 제거
-    .trim()
-    .toLowerCase();
-}
-```
-
-**구체적인 매칭 알고리즘**
-
-```plaintext
-A. 키워드 추출 및 가중치 부여
-B. 유사도 측정 방식
-```
-
-**시스템 아키텍처**
-
-```plaintext
-A. 실시간 매칭 API
-B. 캐싱 로직
-C. 자동완성 기능
-```
-
-AI가 제시한 포괄적인 아키텍처(API, 캐싱, 자동완성 등)는 1일 구현에는 과도했지만, **매칭 전략과 정규화 로직**은 핵심 아이디어가 되었어요.
-
-### 2단계: 빠른 구현을 위한 간소화
-
-AI는 제한된 조건(프론트엔드만, 1일 구현)에 맞춰 **간단한 유사도 검색 구조**를 제안했어요.
-
-**AI에게 던진 질문**
-
-```
-프론트엔드에서 구현해야 해.
-우선 추천 요금은 JSON으로 프론트에서 들고있을거야.
-구현 제한 기간은 1일이야.
-```
-
-**AI의 실용적 제안**
-
-**간소화된 매칭 로직**
-
-```javascript
-// 1단계: 입력값 정규화
-function normalizeInput(input) {
-  return input
-    .replace(/\([^)]*\)/g, "") // 괄호 제거
-    .replace(/뉴\s*/g, "") // '뉴' 제거
-    .replace(/\s+/g, "") // 모든 공백 제거
-    .toUpperCase();
-}
-
-// 2단계: 키워드 포함 여부 체크
-function findMatches(userInput, priceData) {
-  const normalized = normalizeInput(userInput);
-  const matches = [];
-
-  Object.keys(priceData).forEach((productKey) => {
-    const normalizedKey = normalizeInput(productKey);
-
-    // 완전 일치
-    if (normalized === normalizedKey) {
-      matches.push({ key: productKey, score: 1.0, type: "완전일치" });
-      return;
-    }
-
-    // 포함 관계
-    if (
-      normalized.includes(normalizedKey) ||
-      normalizedKey.includes(normalized)
-    ) {
-      matches.push({ key: productKey, score: 0.8, type: "부분일치" });
-    }
-  });
-
-  return matches.sort((a, b) => b.score - a.score);
-}
-```
-
-**1일 구현을 위한 최적화 팁**
-
-- 단순한 문자열 정규화로 빠른 구현
-- 포함관계 기반 매칭으로 대부분의 케이스 커버
-- React 상태관리로 실시간 반응
-- 직관적인 UI로 사용자 경험 개선
-
-이와 함께 React 컴포넌트로 프리뷰를 만들어줬어요.
-
-[claude preview](https://claude.ai/public/artifacts/96021d26-c6da-476a-8256-92d6065f5096)
-
-이 방식으로도 대부분의 실사용 입력은 커버할 수 있었어요.
-
-### 3단계: 초성/유사 발음 대응을 위한 확장
-
-기본 매칭으로는 한계가 있어서 더 정교한 알고리즘이 필요했어요.
-
-- 그렌져 -> 그랜저
-- 아반때 -> 아반떼
-- ㅅㄴㅌ -> 쏘나타
-
-**AI에게 던진 질문**
-
-```plaintext
-아래 조건이면 어떨 것 같아?
-초성 추출은 라이브러리를 쓸거니까 됐다치자.
-기능 테스트를 위해 해당 알고리즘을 구현해줘.
-
-로딩이 1초 이상 표시되어도 상관없을 것 같음.
-최소 기간 내 구현으론 브루트 포스 검색 하는걸로.
-JSON에 아반떼 k5 그랜저 가 있다면
-사용자가 아반때 K5 그렌져 로 입력해도 매칭할 수 있어야함.
-즉 유사한 발음 글자를 하나로 통합해야 함
-- 한글이면 초성으로 검색
-- 쌍자음은 단자음으로 변경
-- 영문은 소문자로 변경
-- 이후 브루트포스 검색
-```
-
-**AI가 구현한 핵심 알고리즘**
-
-**한글 초성 추출**
-
-```javascript
-const getChosung = (str) => {
-  const chosungList = [
-    "ㄱ",
-    "ㄲ",
-    "ㄴ",
-    "ㄷ",
-    "ㄸ",
-    "ㄹ",
-    "ㅁ",
-    "ㅂ",
-    "ㅃ",
-    "ㅅ",
-    "ㅆ",
-    "ㅇ",
-    "ㅈ",
-    "ㅉ",
-    "ㅊ",
-    "ㅋ",
-    "ㅌ",
-    "ㅍ",
-    "ㅎ",
-  ];
-
-  return str.replace(/[가-힣]/g, (char) => {
-    const code = char.charCodeAt(0) - 44032;
-    const chosungIndex = Math.floor(code / 588);
-    return chosungList[chosungIndex];
-  });
-};
-```
-
-**쌍자음 → 단자음 변환**
-
-```javascript
-const convertDoubleConsonant = (chosung) => {
-  return chosung
-    .replace(/ㄲ/g, "ㄱ")
-    .replace(/ㄸ/g, "ㄷ")
-    .replace(/ㅃ/g, "ㅂ")
-    .replace(/ㅆ/g, "ㅅ")
-    .replace(/ㅉ/g, "ㅈ");
-};
-```
-
-**브루트포스 매칭 함수**
-
-```javascript
-function bruteForceMatch(input, dataSource, options = {}) {
-  const { threshold = 0.6, maxResults = 5 } = options;
-  const normalizedInput = normalizeForMatching(input);
-  const results = [];
-
-  Object.entries(dataSource).forEach(([key, data]) => {
-    const normalizedKey = normalizeForMatching(key);
-
-    // 완전 일치
-    if (normalizedInput === normalizedKey) {
-      results.push({ key, data, score: 1.0, type: "완전일치" });
-      return;
-    }
-
-    // 포함 일치
-    if (
-      normalizedInput.includes(normalizedKey) ||
-      normalizedKey.includes(normalizedInput)
-    ) {
-      results.push({ key, data, score: 0.9, type: "포함일치" });
-      return;
-    }
-
-    // 유사도 기반 매칭
-    const similarity = calculateSimilarity(normalizedInput, normalizedKey);
-    if (similarity >= threshold) {
-      results.push({ key, data, score: similarity, type: "유사일치" });
-    }
-  });
-
-  return results.sort((a, b) => b.score - a.score).slice(0, maxResults);
-}
-```
+여기서 사용해볼 수 있어요. [Claude Artifacts - 한글 퍼지 매칭 상품 검색](https://claude.ai/public/artifacts/8f831aa7-1568-415d-921b-3260f544d67e)
 
 **실제 테스트 결과**
 
@@ -309,11 +72,19 @@ function bruteForceMatch(input, dataSource, options = {}) {
 
 이 때 의도했던 함수와 프리뷰가 성공적으로 만들어졌어요. 테스트 케이스가 의도했던 바와 정확히 일치했고, 이를 기반으로 가장 걱정되었던 핵심 로직은 구현이 완료되었어요.
 
-[claude preview](https://claude.ai/public/artifacts/8f831aa7-1568-415d-921b-3260f544d67e)
+**AI가 구현한 핵심 알고리즘**
 
-### 4단계: 데이터 구조 최적화
+<Image src={claudeStep2Code} alt="claudeStep2Code" />
+<br/>
+<Image src={claudeStep2Code2} alt="claudeStep2Code2" />
 
-엑셀로 제공된 추천 가격 데이터를 TypeScript 타입에 맞게 변환하는 작업이 필요했어요.
+### 3단계: 현업 데이터를 코드에 적용하기
+
+같은 시각, 급히 요금제 목록을 만들던 다른 팀의 동료분께서 추천 가격을 엑셀로 제공해주셨습니다. 이를 기반으로 데이터 구조를 최적화하는 작업이 필요했습니다.
+요금제 등록 API의 Request Body 타입을 참고하여 데이터 구조를 최적화하는 작업이 필요했습니다.
+
+만일 AI를 안썼더라면 `.xlsx`를 `.csv (comma separated values)`로 변환하고, 이를 Node.js 환경에서 파싱하는 과정을 거쳤을 겁니다.
+하지만 Cursor의 Claude Agent가 이를 완벽하게 변환해주었습니다.
 
 **기존 타입 정의**
 
@@ -326,16 +97,11 @@ interface RecommendPlan {
 export const RECOMMEND_CAR_PLANS: Record<string, RecommendPlan> = {};
 ```
 
+
+
 **AI에게 엑셀 데이터 변환 요청**
 
-```
-해당 시트 데이터를 보고, 타입에 맞게 객체로 변환해줘.
-
-평일                                    주말
-차종 상한요금 기준요금 1일 7일 30일 1~2 3~4 5~6 7일이상 1시간 6시간 12시간 1~2 3~4 5~6 7일이상 1시간 6시간 12시간
-레이 490000 62000 62000 271000 490000 42000 40800 33862 35900 3500 17500 38500 54600 53040 44020.6 46670 4550 22750 50050
-그랜저 705000 84000 84000 392000 705000 64000 62100 51541 53200 5400 27000 59400 83200 80730 67003.3 69160 7020 35100 77220
-```
+<Image src={xlsxToObject} alt="xlsxToObject" />
 
 엑셀 데이터는 시트를 단순 드래그 복사 붙여넣기만 하였어요.
 
@@ -359,22 +125,36 @@ export const RECOMMEND_CAR_PLANS: Record<string, RecommendPlan> = {
   K5: {
     name: "K5",
     price: {
-      baseFare: 62000,
-      maxFare: 490000,
-      weekdayDayLevel01: 42000,
-      weekendHourLevel03: 50050,
+      baseFare: 10000,
+      maxFare: 20000,
+      weekdayDayLevel01: 30000,
+      weekendHourLevel03: 40000,
     },
   },
   // ...
 };
 ```
 
+엑셀에 작성된 가격인 숫자 데이터를 정확히 파싱해냈고, 이를 기반으로 코드를 작성하면 되었습니다.
+
+## 구현 결과
+
+AI의 도움으로 기능을 구현하고 배포까지 완료했습니다. 여기까진 반나절만에 해낼 수 있었습니다.
+
+<Image src={resultPage} alt="result page" />
+
+모든 것이 순조롭게 끝난 줄 알았지만, QA 파트에서 오류를 발견했습니다.
+
+요금제명에 `"QM6"` 혹은 `"K5"` 를 입력해도 항상 `"eG80"`이라는 다른 차량이 추천되는 문제가 있었습니다.
+이 문제를 해결하기 위해 테스트 코드를 작성하고, 문제의 원인을 찾는 과정이 필요했습니다.
+
 ## 테스트 결과 및 검증
 
-구현한 한글 매칭 알고리즘의 신뢰성 확보를 위해 테스트 케이스를 작성했어요. 테스트 코드 작성도 **Cursor**의 `claude-4-sonnet` 모델을 활용했어요.
+한글 매칭 알고리즘의 신뢰를 확보하기 위해 테스트 케이스를 작성했습니다. 테스트 코드 작성해는 Cursor의 `claude-4-sonnet` 모델을 활용했습니다.
+그리고 테스트를 진행하는 과정에서 AI가 작성한 함수에 문제가 있다는 것을 발견했습니다. 메인 함수인 `bruteForceMatch`의 검색어 파라미터에 영문을 입력하면, `normalizeText` 함수가 빈 문자열을 반환하는 문제가 있었습니다.
 
-- **100% 테스트 통과** (42/42)
-- **커버리지**: 정규화, 유사도, 계산, 매칭, 검증
+`normalizeText`는 한글을 파싱하는 함수로, 정규식 및 초성 추출 로직을 포함하고 있는데, 이때 한글 파싱 후 남은 문자열은 빈 문자열이 되어 영문 검색에 대응하지 못하는 문제가 있었습니다.
+문제의 원인을 찾을 수 있었고, 해당 부분은 직접 코드를 수정하여 해결할 수 있었습니다.
 
 ```ts
 // 테스트용 데이터셋
@@ -406,251 +186,41 @@ describe("통합 테스트", () => {
 
 <Image src={testResult} alt="test result" />
 
-## 최종 구현 결과
+다양한 케이스를 모두 통과하는 것을 확인하였고, 이를 기반으로 다시 배포하여 문제가 해결되었습니다.
 
-AI의 도움으로 얻은 알고리즘들을 실제 프로덕션 코드에 적용했어요.
+## AI 주도 개발의 교훈
 
-<Image src={resultPage} alt="result page" />
+AI의 도움이 없었더라면 하루만에 이 요구사항을 구현하는 것은 불가능했을 겁니다. 하지만 AI에게 코딩 과정을 맡기고 진행하는게 완전 좋다는 말을 전하고 싶은 것은 아닙니다.
+테스트 없이 배포하였다가 기능에 이상이 있다는 것들 전달받았을 때, 다른 동료들에게 죄송한 마음도 들었고, 오류를 찾고 수정하는 과정에서 조바심이 들었거든요.
 
-### 핵심 매칭 로직 적용
+최근 바이브 코딩에 대한 평가를 보면, 부정적인 의견도 존재합니다.
 
-- `useCallback`과 `debounce`로 사용자 입력에 따라 실시간 추천 결과 제공
-- 사용자 입력에 따라 요금제를 매칭하여 제시
-- 모달을 통한 전체 리스트 제공
+- 주니어 개발자들의 코드를 PR하는데 본인의 코드를 본인이 모른겠다고 한다. LLM이 이렇게 짜주었다고 한다.
+- 피드백을 해주면 원래 코드를 고치기보다, 완전히 새로운 코드를 만들어오기도 한다.
+- 주니어 개발자가 코딩에 소요하는 시간보다 시니어 개발자가 PR에 쏟는 시간이 더 길어진다.
+- 결국 코드를 깊게 이해하고 신뢰하는 데 까지 드는 비용이 AI 코딩 이전보다 더 높아졌다.
 
-> 해당 컴포넌트 코드와 구조는 실무 예시를 단순화한 예제입니다. 실제 서비스 구조와는 무관합니다.
+> 저도 아직 주니어에 해당하는 연차여서, 개발 커뮤니티에서 말하는 평가들을 보고 '난 저렇게 안해야지..'하고 배움이 됐습니다.
 
-```tsx
-// src/components/rental/price/PriceForm.tsx
-const PriceForm = () => {
-  const [recommendState, setRecommendState] = useState({
-    isNameBased: false,
-    isModalSelected: false,
-    name: "",
-    price: null,
-  });
+이러한 이유로 저는 아직 바이브 코딩이나 `Claude Code`같은 프로젝트 전체를 AI에게 맡기는 것은 실제 프로덕션 환경에선 사용해보지 않았습니다.
 
-  // 요금제명 기반 추천 로직
-  const handleNameToRecommendPlan = useCallback(
-    (name: string) => {
-      const matches = bruteForceMatch(name, RECOMMEND_CAR_PLANS, {
-        threshold: 0.6,
-        maxResults: 2,
-      });
-
-      if (matches.length === 0) {
-        // 모달에서 선택된 상태라면 초기화하지 않음
-        if (recommendState.isModalSelected) {
-          return;
-        }
-
-        setRecommendState({
-          isNameBased: false,
-          isModalSelected: false,
-          name: "",
-          price: null,
-        });
-        return;
-      }
-
-      const plan = matches[0].data;
-
-      setRecommendState({
-        isNameBased: true,
-        isModalSelected: false,
-        name: plan.name,
-        price: plan.price,
-      });
-    },
-    [recommendState.isModalSelected],
-  );
-
-  // 입력값 변경 시 실시간 매칭
-  const handleInputChange = useCallback(() => {
-    if (planName && !recommendState.isModalSelected) {
-      handleNameToRecommendPlan(planName);
-    }
-  }, [planName, recommendState.isModalSelected]);
-
-  return (
-    <form>
-      {/* 요금제명 입력 필드 */}
-      <Input
-        value={planName}
-        onChange={debounce(handleInputChange, 1000)}
-        placeholder="요금제명을 입력하세요"
-      />
-
-      {/* 추천 요금제 표시 */}
-      {recommendState.isNameBased && (
-        <RecommendPriceCard
-          name={recommendState.name}
-          price={recommendState.price}
-        />
-      )}
-
-      {/* 전체 추천 목록 모달 */}
-      <RecommendPlanListModal
-        onSelect={(plan) => {
-          setRecommendState({
-            isNameBased: true,
-            isModalSelected: true,
-            name: plan.name,
-            price: plan.price,
-          });
-        }}
-      />
-    </form>
-  );
-};
-```
-
-### 추천 목록 모달 구현
-
-```tsx
-function RecommendPlanListModal({ onSelect }: RecommendPlanListModalProps) {
-  const handleSelectPlan = (plan: RecommendPlan) => {
-    onSelect(plan);
-    closeModal();
-  };
-
-  const columns = [
-    { accessorKey: "name", header: "차종" },
-    { accessorKey: "price.baseFare", header: "기준요금" },
-    { accessorKey: "price.maxFare", header: "상한요금" },
-    // ... 기타 컬럼들
-  ];
-
-  return (
-    <Modal>
-      <ModalHeader
-        title="추천 요금제"
-        description="차량 모델과 시장 데이터를 기반으로 한 합리적인 추천 요금입니다."
-      />
-
-      <DataTable
-        enableRowSelection
-        disallowEmptySelection
-        onRowClick={handleSelectPlan}
-        columns={columns}
-        data={Object.values(RECOMMEND_CAR_PLANS)}
-      />
-    </Modal>
-  );
-}
-```
-
-## AI 주도 개발의 핵심 전략
-
-이번 프로젝트를 통해 얻은 AI 활용 노하우를 정리했어요.
-
-### 1. 단계별 구체적 질문하기
-
-**잘못된 접근**
-
-```
-"추천 기능 만들어줘"
-```
-
-**올바른 접근**
-
-```
-"프로젝트 성격: 미들웨어형 프로젝트
-요구사항: 상품명 입력 시 JSON 추천가격 표시
-제약사항: 프론트엔드만, 1일 구현
-핵심 문제: '뉴 K5(DL3) LPi(24년식)' → 'K5' 매칭 방법"
-```
-
-### 2. 제약사항을 명확히 전달하기
-
-각 단계마다 현실적인 제약사항을 추가로 알려주며 실용적인 해결책을 유도했어요:
-
-- **1단계**: 전체적인 아키텍처 파악
-- **2단계**: "프론트엔드만, 1일 구현" → 간소화된 방안
-- **3단계**: "브루트포스 검색, 1초 로딩 허용" → 성능보다 정확도 우선
-- **4단계**: "TypeScript 타입에 맞게" → 실제 코드 적용 가능
-
-### 3. AI 답변의 선택적 활용
-
-AI가 제시한 모든 방안을 사용하지 않고, 상황에 맞는 부분만 선택적으로 활용했어요:
-
-**사용한 부분**
-
-- 매칭 전략과 알고리즘
-- 정규화 로직
-- 데이터 구조 변환
-- 핵심 구현 코드
-
-**제외한 부분**
-
-- 복잡한 아키텍처 (API, Redis 캐싱)
-- 자동완성 UI (시간 부족)
-- 머신러닝 기반 학습 (오버엔지니어링)
-
-### 4. 반복적 개선 과정
-
-AI와의 대화를 통해 점진적으로 해결책을 개선해나갔어요:
-
-```plaintext
-포괄적 방안 → 제약사항 반영 → 고급 알고리즘 → 실제 적용
-```
-
-## 결과 및 배운 점
-
-### 구현 성과
-
-**기능적 성과**
-
-- 하루 만에 복잡한 한글 매칭 알고리즘 구현 완료
-- 다양한 입력 패턴에 대한 높은 매칭 정확도 달성
-- 직관적인 UI로 사용자 경험 개선
-
-**기술적 성과**
-
-- 한글 초성 추출 및 유사도 매칭 알고리즘 학습
-- TypeScript 타입 안정성 확보
-- 재사용 가능한 매칭 유틸리티 함수 구축
-
-### AI 주도 개발의 장점
-
-**1. 빠른 프로토타이핑**
-
-- 복잡한 알고리즘도 단시간에 구현 가능
-- 다양한 접근 방식을 빠르게 검토 가능
-
-**2. 학습 효과**
-
-- 새로운 기술이나 알고리즘을 실전에서 바로 적용
-- 단순 복사가 아닌 원리 이해를 통한 응용
-
-**3. 품질 보장**
-
-- AI가 제시한 코드는 대부분 동작하는 수준
-- 타입 안정성이나 에러 처리도 고려됨
-
-### 주의할 점
-
-**1. 맹신하지 말기**
-
-- AI 답변을 그대로 사용하지 말고 상황에 맞게 선택적 활용
-- 복잡한 아키텍처는 오버엔지니어링일 수 있음
-
-**2. 제약사항 명확히 하기**
-
-- 프로젝트의 현실적 제약사항을 구체적으로 전달
-- 단계별로 피드백하며 방향 조정
-
-**3. 테스트와 검증**
-
-- AI가 생성한 코드도 반드시 테스트 필요
-- 엣지 케이스나 성능 이슈 확인
+결국 아직까진 "AI"가 만들어준 코드를 검증해줄 "사람"이 필요해 보인다는게 저의 생각입니다.
 
 ## 마무리
 
-급박한 요구사항 앞에서 AI를 활용한 개발은 매우 효과적이었어요. 특히 복잡한 알고리즘이나 생소한 기술을 빠르게 학습하고 적용해야 할 때 AI의 도움이 컸습니다.
+이번에 소중한 경험을 가질 수 있었습니다. 하루만에 요구사항이 나오고 결과물까지 내야하는 것이 평소에 해보기 어려운 경험이었습니다. 이런 과정에서 배운 것들이 있습니다.
 
-하지만 AI는 도구일 뿐이고, **명확한 문제 정의와 단계적 접근**이 성공의 핵심이었어요. 제약사항을 구체적으로 전달하고, AI의 답변을 선택적으로 활용하며, 실제 프로덕션에 맞게 조정하는 과정이 중요했습니다.
+AI를 적극 활용할 떄의 장점으로
+- 복잡한 알고리즘을 단시간에 구현했고,
+- 엑셀 데이터를 TypeScript 타입에 맞게 객체로 변환해준건 큰 도움이 됐습니다.
+- 다양한 테스트 케이스또한 빠르게 만들 수 있었습니다.
 
-AI는 빠른 문제 해결에 있어 강력한 도구였지만, 그보다 더 중요한 건 **문제를 정확히 정의하고, 제약조건을 분명히 전달하는 사용자 스킬**이였어요.
+하지만 AI를 쓸 때 함정에 빠지지 않도록 주의해야 합니다.
+- AI가 생성한 코드는 완벽해보이지만 동작하지 않을 수 있습니다.
+  - 영문 입력 시 빈문자열이 반환되는 경우는, 아마 사람이 코딩했다면 당연히 예외처리가 들어갔을 겁니다.
+- 테스트 없이 배포했을 때 리스크가 아주 클겁니다..
+- 코드를 이해하는 데에도 시간이 소요됩니다.
+  - AI가 코드를 빠르게 써주더라도, 본인이 커밋한 코드를 이해하지 못하면 차라리 시니어 개발자가 직접 LLM을 쓰는게 더 빠를겁니다.
 
-이번 경험은 단순한 코드 구현을 넘어, **AI를 활용한 실무 중심 개발 사고방식**을 체득하는 기회가 되었습니다.
+가장 중요한 것은 **AI는 코드 작성 속도를 높여주지만, 코드 품질과 신뢰는 여전히 개발자의 몫**이라는 것입니다.
+AI는 분명 강력한 도구이지만, 결국 좋은 코드를 만드는 것은 도구를 올바르게 사용하는 개발자의 역량에 달려있다는 것을 깨달은 하루였습니다.
