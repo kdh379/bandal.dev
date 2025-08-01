@@ -38,7 +38,8 @@ const pretendard = localFont({
 
 export const metadata: Metadata = {
   title: "bandal.dev",
-  description: "Next.js와 MDX로 만든 개인 블로그입니다.",
+  description: "프론트엔드 개발자 김도현의 블로그입니다.",
+  keywords: "Next.js, React, TypeScript, JavaScript, 프론트엔드, 블로그",
 };
 
 export default function RootLayout({
