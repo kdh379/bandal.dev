@@ -1,6 +1,6 @@
 export const meta = {
   title: "About",
-  date: "2024-09-12",
+  date: "2025-08-01",
 };
 
 # 김도현
@@ -9,7 +9,7 @@ export const meta = {
 
 능숙한 분야가 아닌 것도 경험하는 것을 좋아합니다. 다양한 경험을 통해 여러 분야에 대한 이해를 넓힘으로써 기술 리더가 되는 것이 목표입니다.
 
-단순하면서 잘 만들어진 것을 좋아합니다. 좋은 제품은 화려하고 복잡한 코드 패턴보다는 단순하고 명확한 코드 패턴으로 동료가 이해를 쉽게 할 수 있도록 구성되어 있다고 생각합니다.
+단순하면서 잘 만들어진 것을 좋아합니다. 좋은 코드는 화려하고 복잡한 패턴보다는 단순하고 명확한 코드 패턴으로 동료가 쉽게 이해할 수 있는 것이라 생각합니다.
 
 동료에게 좋은 피드백을 받는 것을 좋아합니다. 많은 피드백을 나누기 위해 동료에게 적극적으로 의견을 묻고, 작은 피드백도 놓치지 않고 프로젝트에 적극 반영합니다.
 
@@ -18,17 +18,7 @@ export const meta = {
 ## Contact
 
 - [Github](https://github.com/kdh379)
-- [bandal2kim@gmail.com](mailto:bandal2kim@gmail.com)
-
-## Skills
-
-### Frontend
-
-- JS, TS, React, Next.js, Vite, TailwindCSS, Emotion, SCSS
-
-### Backend
-
-- Drizzle, SQL
+- [bandal2dev@gmail.com](mailto:bandal2dev@gmail.com)
 
 ## Experience
 
@@ -36,32 +26,41 @@ export const meta = {
 
 서비스개발팀
 
-`2024. 07 ~ 현재`
+2024년 07월 ~ 현재
 
-- 투루카 디자인 시스템 구축
-- 신규 프로젝트 웹, 웹뷰 개발
+`TypeScript` `React` `Next.js` `TailwindCSS` `SCSS` `vitest`
+
+#### 디자인 시스템 컴포넌트 구축 및 유지보수
+
+- React Aria 헤드리스 라이브러리 기반의 컴포넌트 개발
+- Storybook을 통해 문서화하여 팀 및 디자이너, 기획자에게 컴포넌트 가이드 공유
+- Figma variables를 json으로 관리하고, 이를 css variables 및 tailwindcss utility class로 변환하는 환경 구축
+- 사내 AI [증강형 코딩](https://tidyfirst.substack.com/p/augmented-coding-beyond-the-vibes) 개발을 위한 Cursor Rules 구성
+
+#### 신규 프로젝트 &lt;카플랫&gt;의 웹, 웹뷰 개발
+
+- 신규 구축한 디자인 시스템 컴포넌트를 적용한 신규 프로젝트로, 개발 환경 구축 및 개발
+  - 페이지 작성, 인증 토큰 관리, 권한 처리 등 다양한 기능 구현
+- API 타입 작성 과정을 개선하기 위해, Swagger (OpenAPI 3.0) yaml 파일을 파싱하여 타입 자동 생성 스크립트 구축
+- AWS CloudWatch + RUM 기반 로그 모니터링 환경 구축
+  - [Next.js의 다양한 실행 환경의 모든 에러를 자동 수집](/blog/nextjs-logging-strategy)
+- 웹뷰 환경에서 framer-motion을 활용한 Pull-To-Refresh 구현
+- 휴대폰으로 촬영한 이미지 업로드 시 용량을 줄이기 위한 이미지 압축 스크립트 구현
+  - 함수 props로 max 1MB를 주입할 경우, 1MB에 근접하도록 압축하면서, 최고의 품질을 유지하도록 이미지 압축 스크립트 구현
 
 ### (주)이노룰스
 
 기술연구소 - 제품기술팀
 
-`2022. 03. ~ 2024. 03.`
+2022년 03월 ~ 2024년 03월
+
+`TypeScript` `React` `Next.js` `TailwindCSS` `React-Query` `Recoil`
 
 - 신규 솔루션 웹 애플리케이션 프론트엔드 개발
 - 백오피스 웹 프론트엔드 신규 기능 개발
 - 기존 솔루션 기술지원
 
 #### Java 기반 백엔드 성능 모니터링 웹 앱
-
-`2023. 03. ~ 2023. 12.`
-
-**Core Tech Stack**
-
-- TypeScript, React, Next.js
-- React-Query, Context API, Recoil
-- Tailwind CSS, SCSS
-
-**What did I do**
 
 - 오픈소스 모니터링 솔루션을 분석하며 기획, 설계, 기술스택 선정, 개발 등 다방면의 역할 수행
 - `Vanilla JS` 기반의 사내 디자인 시스템을 `React`로 마이그레이션
@@ -73,16 +72,6 @@ export const meta = {
 - [React-Query, Suspense, Error Boundary를 통해 API 캐싱 및 예외 처리 로직 구현](/post/react-query)
 
 #### JAVA 기반 솔루션 어드민 페이지 웹 앱
-
-`2022. 05. ~ 2023. 01.`
-
-**Core Tech Stack**
-
-- TypeScript, React, Next.js
-- swr, jotai
-- SCSS, CSS Module
-
-**What did I do**
 
 - 사내 솔루션 제품 설정 방법을 분석하여 화면 설계
 - `React` 기반 컴포넌트 계층 구성 및 UI 구현
@@ -120,20 +109,20 @@ React-Natvie(Expo) 학습을 위해 구현한 프로젝트입니다.
 
 쌍용교육센터
 
-> `2021. 07. ~ 2022. 01.`
+> 2021년 07월 ~ 2022년 01월
 >
 > - 자바에 대해 기본부터 심화과정까지 학습하여 웹을 직접 구현해보는 교육과정
 > - 팀별 웹앱 개발 프로젝트를 진행하여 협업 경험
 > - B/E : Spring Boot, Mybatis, MySQL, JSP
 > - F/E : JavaScript, jQuery
 
-_병역 2019. 07. ~ 2021. 04._
+_병역 2019년 07월 ~ 2021년 04월_
 
 ### 신구대학교 정보통신과
 
 신구대학교
 
-> `2017. 03. ~ 2019. 02.`
+> 2017년 03월 ~ 2019년 02월
 >
 > - 네트워크 TCP/UDP, OSI 7Layer, Network Protocol에 대한 이해
 > - Java 기반의 FullStack 교육으로, JDBC, Swing을 이용한 프로젝트 구현
