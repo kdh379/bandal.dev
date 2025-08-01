@@ -65,7 +65,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     },
     // Allows customizing built-in components, e.g. to add styling.
     h1: ({ children }) => (
-      <h1 className="scroll-mt-24 text-4xl font-bold text-heading mb-6 tracking-tight font-serif">
+      <h1 className="scroll-mt-24 text-4xl font-bold text-heading mb-6 tracking-tight">
         {children}
       </h1>
     ),
@@ -75,7 +75,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       const Heading = createHeading(2);
       return (
         <Heading {...props}>
-          <span className="scroll-mt-24 text-3xl font-bold text-heading mt-16 mb-6 block border-b border-hr pb-2 font-serif tracking-tight">
+          <span className="scroll-mt-24 text-3xl font-bold text-heading mt-16 mb-6 block border-b border-hr pb-2 tracking-tight">
             {props.children}
           </span>
         </Heading>
@@ -131,14 +131,14 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     },
     ul(props) {
       return (
-        <ul className="list-disc pl-6 my-4 space-y-2 text-foreground font-sans [&_p]:my-0">
+        <ul className="list-disc pl-6 my-2 space-y-1 text-foreground font-sans [&_p]:my-0">
           {props.children}
         </ul>
       );
     },
     ol(props) {
       return (
-        <ol className="list-decimal pl-6 my-4 space-y-2 text-foreground font-sans">
+        <ol className="list-decimal pl-6 my-2 space-y-1 text-foreground font-sans">
           {props.children}
         </ol>
       );

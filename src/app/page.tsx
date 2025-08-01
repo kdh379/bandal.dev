@@ -75,7 +75,8 @@ function HeroSection() {
           </Link>
         </div>
       </div>
-      <div
+      <Link
+        href="/about"
         className={cn(
           "hidden md:block w-4/12 rounded-xl overflow-hidden",
           "shadow-lg transition duration-300 hover:shadow-xl hover:scale-[1.02]",
@@ -94,7 +95,7 @@ function HeroSection() {
             <div className="text-lg opacity-90">BANDAL.DEV</div>
           </div>
         </div>
-      </div>
+      </Link>
     </section>
   );
 }
