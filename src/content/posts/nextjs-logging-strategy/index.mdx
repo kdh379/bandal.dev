@@ -2,9 +2,9 @@ import { Image } from "@/components/Media";
 import aiQuestion from "./perplexity-rsc-logging-question.png";
 
 export const meta = {
-  title: "Next.js에서 효율적인 로깅 구조 만들기",
+  title: "Next.js에서 자동화된 로깅 구조 만들기",
   description:
-    "서버 사이드와 클라이언트 사이드를 아우르는 효율적인 로깅 전략과 구현 방법을 알아봅니다.",
+    "서버 사이드와 클라이언트 사이드를 아우르는 자동화된 로깅 전략과 구현 방법을 알아봅니다.",
   date: "2025-06-13",
 };
 
@@ -21,7 +21,7 @@ export const meta = {
 
 ## 기존 로깅 방식의 문제점
 
-효율적인 로깅 구조가 없었을 땐 중요한 로직마다 수동으로 로깅 코드를 추가해야 했어요.
+자동화된 로깅 구조가 없었을 땐 중요한 로직마다 수동으로 로깅 코드를 추가해야 했어요.
 
 ```typescript
 async function createReservation(formData: FormSchema) {
@@ -54,34 +54,17 @@ async function createReservation(formData: FormSchema) {
 - 비즈니스 로직과 로깅 로직이 뒤섞여 있어요
 - 실제 중요한 로직을 파악하기 어려워요
 
-**2. 일관성 부족**
-
-- 개발자마다 다른 로깅 형식을 사용해요
-- 로그 분석 시 혼란을 야기해요
-
-**3. 누락 가능성**
+**2. 누락 가능성**
 
 - 수동으로 로그를 추가하다 보면 빠뜨리기 쉬워요
 - 중요한 에러 상황을 놓칠 수 있어요
 
-**4. 유지보수 어려움**
+**3. 유지보수 어려움**
 
 - 로깅 형식 변경 시 모든 코드를 수정해야 해요
 - 확장성이 떨어져요
 
-**5. 분산된 관리**
-
-- 클라이언트와 서버 로그가 따로 관리되어요
-- 통합적인 분석이 어려워요
-
-### 자동화된 로깅의 장점
-
-이런 문제들을 해결하기 위해 **자동화된 로깅 시스템**을 구축하면:
-
-- **깔끔한 코드**: 비즈니스 로직에만 집중할 수 있어요
-- **일관된 형식**: 통일된 로그 구조로 분석이 쉬워요
-- **누락 방지**: 중요한 이벤트를 자동으로 캡처해요
-- **통합 관리**: 서버와 클라이언트 로그를 한 곳에서 관리해요
+이런 문제들을 해결하기 위해 **자동화된 로깅 시스템**을 구축하였어요.
 
 ## Next.js의 복잡한 실행 환경 이해하기
 
@@ -101,12 +84,11 @@ Next.js App Router는 여러 실행 환경에서 코드가 동작해요. 각 환
 - 데이터베이스 연결 에러, API 호출 에러 발생 가능
 - Node.js 환경에서 동작
 
-**Middleware - Edge Runtime**
+**Middleware**
 
 - Edge Runtime에서 실행
-- 모든 요청의 최상위에서 동작
-- Server Action은 항상 middleware를 거친 다음 수행
 - 인증, 리다이렉션 로직에서 에러 발생 가능
+- 모든 요청(페이지 이동, 서버 액션)의 최상위에서 동작
 
 **Error Pages**
 
@@ -116,7 +98,7 @@ Next.js App Router는 여러 실행 환경에서 코드가 동작해요. 각 환
 
 ### 환경별 로깅 전략이 필요한 이유
 
-각 환경은 서로 다른 특성을 가지고 있어요:
+각 환경은 서로 다른 특성을 가지고 있어요.
 
 | 환경        | 특징              | 주요 에러 유형               |
 | ----------- | ----------------- | ---------------------------- |
@@ -139,6 +121,7 @@ Next.js App Router는 여러 실행 환경에서 코드가 동작해요. 각 환
 // [!code filename:lib/logger.ts]
 "use server";
 
+// 로깅을 이벤트 타입별로 구분했어요. 로그 레벨별로 구분하여도 좋아요.
 type EventType = "runtime_error" | "api_error" | "network_error" | "user_action";
 
 interface LogData {
@@ -156,7 +139,7 @@ export function logger(logData: LogData) {
   }
 
   /**
-   * 로그 전달 혹은 console.log 출력
+   * Sentry, Datadog 등으로 로그 전달 혹은 console.log 출력
    *
    * 서버 액션으로 수행하기 때문에, console.log로 남기더라도 서버의 터미널에 남게되고,
    * AWS를 사용한다면 CloudWatch Logs에 남게되어 쉽게 확인할 수 있어요.
@@ -168,7 +151,7 @@ export function logger(logData: LogData) {
 
 브라우저에서 발생하는 에러를 자동으로 수집하는 컴포넌트를 만들어요.
 
-- 브라우저에서 발생하는 런타임 에러는 모두 `window.onerror` 및 `window.onunhandledrejection`로 전파돼요.
+- 브라우저에서 발생하는 런타임 에러는 모두 `window.addEventListener("error", ...)` 및 `window.onunhandledrejection`로 전파돼요.
 - 이 원리를 이용해서 하나의 컴포넌트에서 모든 런타임 에러를 캡처할 수 있어요.
 
 ```tsx
@@ -181,24 +164,56 @@ import { logger } from "./logger";
 function setupRuntimeErrorHandlers() {
   if (typeof window !== "undefined") {
     // Reference Error, Type Error 등 런타임 에러 캡처
-    window.onerror = (message, source, _lineno, _colno, error) => {
+    window.addEventListener(
+      "error",
+      (event) => {
       // error 객체에는 다음 정보들이 포함됩니다:
       // - error.name: "ReferenceError" | "TypeError" 등
       // - error.message: "aaa is not defined" 등
       // - error.stack: 에러 발생 위치의 스택 트레이스
 
-      logger({
-        eventType: "runtime_error",
-        message: message.toString(),
-        error: {
-          name: error?.name,
-          message: error?.message,
-          stack: error?.stack,
-          source: source,
-        },
-        userAgent: getBrowserInfo(),
-      });
-    };
+        const error = event.error;
+        const message = error?.message || "Unknown error";
+        const source = error?.stack?.split("\n")[1] || "Unknown source";
+        const userAgent = navigator.userAgent;
+
+        // 리소스 로드 실패 등의 에러 감지
+        if (event.target && event.target !== window) {
+            const target = event.target as HTMLElement;
+            const tagName = target.tagName?.toLowerCase();
+
+            // target.tagName을 통해 리소스 에러를 감지할 수 있어요.
+            const isResourceError = [
+              "script",
+              "link",
+              "img",
+              "iframe",
+              "audio",
+              "video",
+            ].includes(tagName);
+
+            if (isResourceError) {
+              // 리소스 로드 실패 등의 에러 로깅
+              ...
+              return;
+            }
+          }
+
+          // 런타임 에러 로깅
+          logger({
+            eventType: "runtime_error",
+            message: message.toString(),
+            error: {
+              name: error?.name,
+              message: error?.message,
+              stack: error?.stack,
+              source: source,
+            },
+            userAgent: userAgent,
+          });
+        }
+      },
+    );
 
     // async/await나 Promise에서 발생하는 에러 캡처
     window.onunhandledrejection = (event) => {
@@ -255,7 +270,7 @@ export default function RootLayout({
 
 - [vercel/next.js#54719](https://github.com/vercel/next.js/discussions/54719)
 
-Next.JS는 서버 사이드에서 에러가 발생하면 error.tsx로 fallback되어요. 이때 별도의 로깅을 남기고자 하여도, 빌드 환경에선 로깅을 수행할 수 없어요. error.tsx에서 `error.message`를 보면, 아래 에러 메시지를 보게 돼요.
+Next.JS는 서버 사이드에서 `throw`가 발생하면 error.tsx로 fallback되어요. 이때 별도의 로깅을 남기고자 하여도, 빌드 환경에선 로깅을 수행할 수 없어요. error.tsx에서 `error.message`를 보면, 아래 에러 메시지를 보게 돼요.
 
 > [!danger]
 >
@@ -308,7 +323,7 @@ export const onRequestError: Instrumentation.onRequestError = async (
   - path: 현재 페이지 경로
   - method: GET
   - headers: next/headers 정보
-    - onRequestError로 콜백된 실행 컨텍스트 내에선 next/headers 를 호출해도 빈 값이 나와요. 대신 request.headers를 사용할 수 있어요.
+    - `logger`함수에는 `next/headers`를 호출하여 헤더 정보를 저장하고 있지만, `onRequestError` 콜백 함수가 실행된 **Edge Runtime 컨텍스트** 내에선 빈 값이 나왔어요. 대신 `request.headers`를 사용할 수 있어요.
 - `context`:
   - routerKind: 라우터 종류 (`"App Router"` | `"Page Router"`)
   - routePath: 현재 페이지 경로인데, dynamic route일 경우 `"/reserve/[id]"` 처럼 표현되어요.
