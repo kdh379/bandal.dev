@@ -158,6 +158,7 @@ export function logger(logData: LogData) {
 // [!code filename:components/RuntimeLogger.tsx]
 "use client";
 
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { useEffect } from "react";
 import { logger } from "./logger";
 
@@ -167,57 +168,61 @@ function setupRuntimeErrorHandlers() {
     window.addEventListener(
       "error",
       (event) => {
-      // error 객체에는 다음 정보들이 포함됩니다:
-      // - error.name: "ReferenceError" | "TypeError" 등
-      // - error.message: "aaa is not defined" 등
-      // - error.stack: 에러 발생 위치의 스택 트레이스
+        const errorMessage = event.message ?? "An unknown error occurred";
 
-        const error = event.error;
-        const message = error?.message || "Unknown error";
-        const source = error?.stack?.split("\n")[1] || "Unknown source";
-        const userAgent = navigator.userAgent;
+        // Next.js 프레임워크가 "re-render" 방지를 위해 "NEXT_HTTP_ERROR_FALLBACK;404" 에러를 throw 하는 것을 무시
+        const isNotFoundThrow = errorMessage
+          .toString()
+          .includes("NEXT_HTTP_ERROR_FALLBACK;404");
+        if (isNotFoundThrow) {
+          return;
+        }
 
         // 리소스 로드 실패 등의 에러 감지
         if (event.target && event.target !== window) {
-            const target = event.target as HTMLElement;
-            const tagName = target.tagName?.toLowerCase();
+          const target = event.target as HTMLElement;
+          const tagName = target.tagName?.toLowerCase();
 
-            // target.tagName을 통해 리소스 에러를 감지할 수 있어요.
-            const isResourceError = [
-              "script",
-              "link",
-              "img",
-              "iframe",
-              "audio",
-              "video",
-            ].includes(tagName);
+          const isResourceError = [
+            "script",
+            "link",
+            "img",
+            "iframe",
+            "audio",
+            "video",
+          ].includes(tagName);
 
-            if (isResourceError) {
-              // 리소스 로드 실패 등의 에러 로깅
-              ...
-              return;
-            }
+          if (isResourceError) {
+            // 리소스 로드 실패 등의 에러 로깅
+            ...
+            return;
           }
-
-          // 런타임 에러 로깅
-          logger({
-            eventType: "runtime_error",
-            message: message.toString(),
-            error: {
-              name: error?.name,
-              message: error?.message,
-              stack: error?.stack,
-              source: source,
-            },
-            userAgent: userAgent,
-          });
         }
+
+        // 런타임 에러 로깅
+        logger({
+          eventType: "runtime_error",
+          message: errorMessage,
+          error: {
+            name: error?.name,
+            message: errorMessage,
+            stack: error?.stack,
+            source: error?.source,
+          },
+          // ... 그 외 userAgent, 브라우저 정보 등
+        });
       },
     );
 
     // async/await나 Promise에서 발생하는 에러 캡처
     window.onunhandledrejection = (event) => {
       const error = event.reason;
+
+      // Next.js 프레임워크가 "re-render" 방지를 위해 "NEXT_REDIRECT" 에러를 throw 하는 것을 무시
+      const isNextRedirectThrow = isRedirectError(error);
+      if (isNextRedirectThrow) {
+        return;
+      }
 
       logger({
         eventType: "runtime_error",
@@ -227,7 +232,7 @@ function setupRuntimeErrorHandlers() {
           message: error?.message,
           stack: error?.stack,
         },
-        userAgent: getBrowserInfo(),
+        // ... 그 외 userAgent, 브라우저 정보 등
       });
     };
   }
