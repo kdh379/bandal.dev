@@ -1,11 +1,13 @@
 export const meta = {
   title: "About",
-  date: "2025-09-10",
+  date: "2025-12-03",
 };
 
 # 김도현
 
-새로운 기술을 적극적으로 도입하고 팀에 전파하는 프론트엔드 개발자 **김도현** 입니다.
+_updated at 2025-12-03_
+
+새로운 기술을 적극적으로 도입하고 팀에 전파하는 프론트엔드 개발자입니다.
 
 4년차 프론트엔드 개발자로서, React/TypeScript 기반의 서비스 개발 및 디자인 시스템 구축 경험을 보유하고 있습니다.
 
@@ -15,7 +17,6 @@ export const meta = {
 
 ## Contact
 
-- [Github](https://github.com/kdh379)
 - [bandal2dev@gmail.com](mailto:bandal2dev@gmail.com)
 
 ## Experience
@@ -40,12 +41,27 @@ export const meta = {
 
 - 디자인 시스템 컴포넌트를 적용한 신규 프로젝트 개발 환경 구축 및 개발
   - 페이지 작성, 인증 토큰 관리, 권한 처리 등 다양한 기능 구현
-- API 타입 작성 과정 개선을 위해 Swagger(OpenAPI 3.0) yaml을 TypeScript 타입 자동 생성 스크립트 구축 및 Full Type Safe한 Fetch SDK 구현
+- OpenAPI 3.0 yaml → TypeScript 타입 자동 생성 스크립트 구축 및 Full Type Safe한 Fetch SDK 구현
 - AWS CloudWatch + RUM 기반 로그 모니터링 환경 구축
   - [Next.js의 다양한 실행 환경의 모든 에러를 자동 수집](/blog/nextjs-logging-strategy)
 - 웹뷰 환경에서 framer-motion, View Transition API를 활용한 앱 수준의 인터랙션 구현
-- 최신 모바일 환경에서 촬영한 이미지 업로드 시 발생하는 UX 저하 및 서버 부하 문제 해결
-  - 압축은 npm 라이브러리를 활용하되, 목표한 품질과 용량을 최적의 균형으로 맞추도록 스크립트 구현
+- 모바일 환경에서 촬영한 이미지의 최적 해상도, 용량으로 압축 스크립트 구현
+
+#### B2B 개발자센터 구축
+
+1인 프론트엔드 프로젝트
+
+- OpenAPI 3.0 yaml 파싱 구조 개발 및 API 문서 자동 생성
+- Endpoint, Parameter, 에러코드 등 통합 검색 기능 구현
+- 카플랫 도메인 온보딩 가이드 및 연동 문서 작성
+
+#### AI 기반 사내 데이터 분석 챗봇 개발
+
+- pgvector 기반 RAG 아키텍처로 자연어 질의를 SQL로 자동 변환
+  - 비즈니스 용어 → Embedding 유사도 검색으로 DB 스키마 매핑 시스템 구축
+  - 유사도 검색 결과를 동적 Prompt로 조합하여 SQL 쿼리 생성 및 실행
+- Vercel AI SDK 기반 스트리밍 응답 구현
+- 세션별 채팅 이력 관리 및 공유 기능
 
 ### (주)이노룰스
 
