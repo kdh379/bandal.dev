@@ -10,7 +10,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@next/mdx": "^15.3.3",
+    "@next/mdx": "^15.5.7",
     "@radix-ui/react-tabs": "^1.1.12",
     "@shikijs/transformers": "^3.6.0",
     "@vercel/analytics": "^1.5.0",
@@ -18,16 +18,16 @@
     "dayjs": "^1.11.13",
     "dedent": "^1.6.0",
     "husky": "^9.1.7",
-    "next": "15.5.2",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "next": "15.5.7",
+    "react": "^19.1.2",
+    "react-dom": "^19.1.2",
     "shiki": "^3.6.0",
     "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^1.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@next/eslint-plugin-next": "^15.3.3",
+    "@next/eslint-plugin-next": "^15.5.7",
     "@tailwindcss/postcss": "^4.1.10",
     "@types/mdx": "^2.0.13",
     "@types/node": "^22.15.31",
@@ -35,7 +35,7 @@
     "@types/react-dom": "^19",
     "@typescript-eslint/parser": "^8.34.0",
     "eslint": "^9.28.0",
-    "eslint-config-next": "15.5.2",
+    "eslint-config-next": "15.5.7",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.4.1",
