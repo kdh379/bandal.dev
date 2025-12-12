@@ -4,6 +4,8 @@ import macTerminal from "./mac-terminal.png";
 import dockerTerminalEnv from "./docker-terminal-env.png";
 import dockerTerminal from "./docker-terminal.png";
 import dockerTerminal2 from "./docker-terminal-2.png";
+import dockerTerminal3 from "./docker-terminal-3.png";
+import macTerminal2 from "./mac-terminal-2.png";
 
 export const meta = {
   title: "React2Shell(CVE-2025-55182) 취약점 분석",
@@ -174,6 +176,16 @@ _mac os terminal screenshot_
 
 _docker terminal screenshot_
 <Image src={dockerTerminal2} alt="Docker Terminal" />
+
+보안 패치가 이뤄진 버전으로 빌드 후 다시 테스트 해보았다.
+
+_docker terminal screenshot_
+<Image src={dockerTerminal3} alt="Docker Terminal" />
+
+_mac os terminal screenshot_
+<Image src={macTerminal2} alt="Mac OS Terminal" />
+
+이후엔 사진과 같이 `Server action not found.` 응답이 나오며 공격이 실패하였다.
 
 ## 방어할 수 있었나?
 
