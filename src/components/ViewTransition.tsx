@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  unstable_ViewTransition as ReactViewTransition,
-  useCallback,
-} from "react";
+import { ViewTransition as ReactViewTransition, useCallback } from "react";
 
 import type { ViewTransitionInstance } from "react";
 

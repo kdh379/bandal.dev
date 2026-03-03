@@ -14,8 +14,6 @@ import { codeToHtml, type BundledLanguage } from "shiki";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
-const DEFAULT_THEME = "github-dark";
-
 export function js(strings: TemplateStringsArray, ...args: any[]) {
   return { lang: "js", code: dedent(strings, ...args) };
 }
