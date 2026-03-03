@@ -1,11 +1,11 @@
 export const meta = {
   title: "About",
-  date: "2025-12-19",
+  date: "2026-03-03",
 };
 
 # 김도현
 
-_updated at 2025-12-19_
+_updated at 2026-03-03_
 
 새로운 기술을 적극적으로 도입하고 팀에 전파하는 프론트엔드 개발자입니다.
 
@@ -73,10 +73,11 @@ _updated at 2025-12-19_
 
 기본 컴포넌트 40개 외 복잡한 컴포넌트 직접 구현
 
-**[React Aria](https://react-spectrum.adobe.com/react-aria/index.html) 기반 공통 컴포넌트**
+**[react-aria](https://react-spectrum.adobe.com/react-aria/index.html) 기반 공통 컴포넌트**
 - Storybook 문서화로 개발자, 디자이너, 기획자에게 가이드 공유
 - Figma variables → CSS variables/TailwindCSS 자동 변환
 - 사내 Cursor AI 활용을 위한 Cursor Rules 구성
+- Storybook(MDX Docs) 문서 기반 AI Skills 확장
 - [디자인 시스템 구축 회고](/blog/design-system-review)
 
 **turu-calendar**
@@ -90,7 +91,11 @@ React Aria의 Date 컴포넌트가 좋지않은 DX, UX로 자체 구현한 Date 
 - 조합: DatePicker, DateRangePicker, DateTimeRangePicker
 - React-Hook-Form 유효성 검사 연동
 
-**Lexical 기반 Rich Text Editor**
+**react-aria → [Radix UI](https://www.radix-ui.com/primitives) 마이그레이션**
+- 부분적 자체 구현 및 라이브러리 혼용 상태를 정리하고 UI 프리미티브 전략 재수립
+- 유지보수 안정성과 커뮤니티 생태계를 기준으로 Radix UI로 전면 전환
+
+**[Lexical](https://lexical.dev/) 기반 Rich Text Editor**
 - 디자인 토큰, 컴포넌트 통합
 - 모든 기능 지원: 글자스타일, Table, ColorPicker, Markdown 등등
 - gzip 압축: 평균 70-80% 용량 감소
